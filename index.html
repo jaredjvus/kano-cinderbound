@@ -1773,6 +1773,32 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
   animation: rage-pulse 2s ease-in-out infinite;
 }
 .rage-btn.raging:hover { background: var(--gold-bright); box-shadow: 0 0 16px rgba(255, 58, 58, 0.7), inset 0 0 6px rgba(168, 16, 16, 0.4); }
+.rage-btn.used { color: var(--parchment-dim); border-color: var(--parchment-dim); }
+
+/* Vessel HP inline input */
+.vessel-hp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  color: var(--gold);
+}
+.vessel-hp input {
+  width: 3rem;
+  text-align: right;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--gold-tarnish);
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.1rem 0.2rem;
+}
+.vessel-hp input:focus { outline: none; border-bottom-color: var(--gold); }
+.vessel-hp .sep { color: var(--gold-tarnish); }
+body.dm-mode .vessel-hp input { pointer-events: none; opacity: 0.7; }
 body.dm-mode .rage-btn { pointer-events: none; opacity: 0.6; cursor: default; }
 @keyframes rage-pulse {
   0%, 100% { box-shadow: 0 0 12px rgba(255, 58, 58, 0.5), inset 0 0 6px rgba(168, 16, 16, 0.4); }
@@ -5626,10 +5652,21 @@ const DEFAULT_STATE = {
   ragesUsed: 0,              // count of rages spent this Long Rest
   rageActive: false,         // currently raging right now
   recklessAttackOn: false,   // Reckless Attack toggled on for current turn
+  brutalStrikeEffect: 'none',// current Brutal Strike effect at Barb 9+
   // Warlock Pact Magic + Invocations tracking
   pactSlotsUsed: 0,          // count of Pact Magic slots spent (short-rest recovery)
   warlockInvocations: [],    // names of Eldritch Invocations currently known
-  magicalCunningUsed: false  // Warlock L2 Magical Cunning: 1/Long Rest slot refill
+  magicalCunningUsed: false, // Warlock L2 Magical Cunning: 1/Long Rest slot refill
+  pactWeaponName: 'Greatsword', // bound pact weapon when Pact of the Blade is picked
+  // Goliath ancestry use tracker (PB/Long Rest)
+  ancestryUsesUsed: 0,
+  // Genie Patron (Warlock 3+)
+  vesselHpCurrent: null,     // null = match max (Warlock level + PB)
+  bottledRespiteUsed: false, // 1/Long Rest entry to vessel
+  elementalGiftFlyUsed: 0,   // BA fly speed (Warlock 6+ Genie), PB/Long Rest
+  // Mystic Arcanum (Warlock 11/13/15/17): one spell each, 1/Long Rest cast
+  mysticArcanum: {},         // { 6: 'spell name', 7: '...', 8: '...', 9: '...' }
+  mysticArcanumUsed: {}      // { 6: true } if spent this Long Rest
 };
 
 let state = loadState();
@@ -6052,6 +6089,33 @@ function renderCombatResources(level) {
   const dynRows = document.getElementById('combat-resources-dynamic');
   dynRows.innerHTML = '';
 
+  const pb = profBonus(level);
+
+  // ---- Goliath ancestry uses ---- (PB/Long Rest, always available)
+  if (level >= 1) {
+    const ancestryName = state.giantAncestry || 'Fire';
+    const ancestryData = GIANT_ANCESTRIES[ancestryName];
+    if (ancestryData) {
+      const max = pb;
+      const used = Math.min(state.ancestryUsesUsed || 0, max);
+      const row = document.createElement('div');
+      row.className = 'resource-row';
+      row.innerHTML = `
+        <span class="resource-label has-tip" title="${ancestryData.desc.replace(/"/g, '&quot;')}">${ancestryData.name} <span class="resource-meta">${ancestryName} ancestry · PB / LR</span></span>
+        <div class="resource-pips" data-resource="ancestry"></div>
+      `;
+      const pipsBox = row.querySelector('.resource-pips');
+      for (let i = 0; i < max; i++) {
+        const pip = document.createElement('div');
+        pip.className = 'pip' + (i >= max - used ? ' used' : '');
+        pip.title = `${ancestryData.name} use ${i + 1}`;
+        pip.addEventListener('click', () => toggleIntModResource('ancestryUsesUsed', i, max));
+        pipsBox.appendChild(pip);
+      }
+      dynRows.appendChild(row);
+    }
+  }
+
   // ---- Pact Magic slots ---- (Warlock L1+, recovers on Short OR Long Rest)
   if (w >= 1) {
     const wlData = CLASS_DATA.warlock.perLevel[w];
@@ -6059,12 +6123,11 @@ function renderCombatResources(level) {
       const slotsMax = wlData.pactSlots.count;
       const slotsUsed = Math.min(state.pactSlotsUsed || 0, slotsMax);
       const slotLevel = wlData.pactSlots.level;
-      const cunningAvailable = w >= 2 && !state.magicalCunningUsed;
       const row = document.createElement('div');
       row.className = 'resource-row pact-row';
-      const tipText = `Pact Magic spell slots — all cast at level ${slotLevel}. Recover ALL on a Short or Long Rest. ${cunningAvailable ? 'Magical Cunning available: 1-minute meditation regains slots up to half max.' : (w >= 2 ? 'Magical Cunning USED (Long Rest to reset).' : '')}`;
+      const tipText = `Pact Magic spell slots — all cast at level ${slotLevel}. Recover ALL on a Short or Long Rest.`;
       row.innerHTML = `
-        <span class="resource-label has-tip" title="${tipText}">Pact Magic <span class="resource-meta">slot ${slotLevel}${cunningAvailable ? ' · Cunning ready' : ''}</span></span>
+        <span class="resource-label has-tip" title="${tipText}">Pact Magic <span class="resource-meta">slot ${slotLevel}</span></span>
         <div class="resource-pips" data-resource="pact"></div>
       `;
       const pipsBox = row.querySelector('.resource-pips');
@@ -6077,6 +6140,86 @@ function renderCombatResources(level) {
       }
       dynRows.appendChild(row);
     }
+  }
+
+  // ---- Magical Cunning ---- (Warlock 2+: 1/Long Rest meditate to refill half slots)
+  if (w >= 2) {
+    const cunningAvailable = !state.magicalCunningUsed;
+    const wlData = CLASS_DATA.warlock.perLevel[w];
+    const refundCount = w >= 20 ? wlData.pactSlots.count
+      : Math.ceil(wlData.pactSlots.count / 2);
+    const row = document.createElement('div');
+    row.className = 'resource-row';
+    const tipText = w >= 20
+      ? `Eldritch Master upgrade: when you use Magical Cunning, you regain ALL ${wlData.pactSlots.count} expended Pact Magic slots. 1 use per Long Rest.`
+      : `1-minute meditation: regain up to ${refundCount} expended Pact Magic slot${refundCount > 1 ? 's' : ''} (half max, round up). 1 use per Long Rest.`;
+    row.innerHTML = `
+      <span class="resource-label has-tip" title="${tipText}">Magical Cunning <span class="resource-meta">${cunningAvailable ? `refill ${refundCount} slot${refundCount > 1 ? 's' : ''}` : 'USED'}</span></span>
+      <button class="rage-btn ${cunningAvailable ? '' : 'used'}" id="magical-cunning-btn"${cunningAvailable ? '' : ' disabled'}>${cunningAvailable ? 'Meditate' : 'Used'}</button>
+    `;
+    row.querySelector('#magical-cunning-btn').addEventListener('click', triggerMagicalCunning);
+    dynRows.appendChild(row);
+  }
+
+  // ---- Genie's Vessel ---- (Warlock 3+ Genie Patron: HP tracker + Bottled Respite)
+  if (w >= 3 && findChosenSubclass('warlock') === 'Genie Patron') {
+    const vesselMax = w + pb;
+    const vesselHp = state.vesselHpCurrent == null ? vesselMax : Math.min(state.vesselHpCurrent, vesselMax);
+    const respiteAvailable = !state.bottledRespiteUsed;
+    const respiteHours = 2 * pb;
+    const row = document.createElement('div');
+    row.className = 'resource-row vessel-row';
+    const tipText = `Genie's Vessel — Spellcasting Focus. AC = your spell save DC, HP = Warlock level + PB. Immune to poison/psychic. Click HP to adjust. If destroyed/lost, 1-hour ceremony for replacement (during Short/Long Rest).`;
+    row.innerHTML = `
+      <span class="resource-label has-tip" title="${tipText}">Vessel HP <span class="resource-meta">Genie Patron</span></span>
+      <span class="vessel-hp">
+        <input type="number" id="vessel-hp-current" value="${vesselHp}" min="0" max="${vesselMax}">
+        <span class="sep">/</span>
+        <span>${vesselMax}</span>
+      </span>
+    `;
+    dynRows.appendChild(row);
+    document.getElementById('vessel-hp-current').addEventListener('input', (e) => {
+      const v = parseInt(e.target.value, 10);
+      state.vesselHpCurrent = isNaN(v) ? vesselMax : Math.max(0, Math.min(vesselMax, v));
+      saveState();
+    });
+
+    const respiteRow = document.createElement('div');
+    respiteRow.className = 'resource-row';
+    const respiteTip = `Bottled Respite — Action to magically vanish into the vessel (20-ft-radius × 20-ft cylinder, comfortable temp). Stay up to ${respiteHours} hours (2 × PB). Bonus Action to exit early. 1/Long Rest.`;
+    respiteRow.innerHTML = `
+      <span class="resource-label has-tip" title="${respiteTip}">Bottled Respite <span class="resource-meta">up to ${respiteHours}h</span></span>
+      <button class="rage-btn ${respiteAvailable ? '' : 'used'}" id="bottled-respite-btn"${respiteAvailable ? '' : ' disabled'}>${respiteAvailable ? 'Enter Vessel' : 'Used'}</button>
+    `;
+    respiteRow.querySelector('#bottled-respite-btn').addEventListener('click', () => {
+      state.bottledRespiteUsed = true;
+      saveState();
+      render();
+    });
+    dynRows.appendChild(respiteRow);
+  }
+
+  // ---- Elemental Gift fly uses ---- (Warlock 6+ Genie Patron: BA fly speed 30 ft, PB/LR)
+  if (w >= 6 && findChosenSubclass('warlock') === 'Genie Patron') {
+    const max = pb;
+    const used = Math.min(state.elementalGiftFlyUsed || 0, max);
+    const row = document.createElement('div');
+    row.className = 'resource-row';
+    const tip = `Elemental Gift — Bonus Action: grant yourself Fly Speed 30 ft (with hover) for 10 minutes. PB uses per Long Rest. Plus passive Resistance to fire damage (Efreeti).`;
+    row.innerHTML = `
+      <span class="resource-label has-tip" title="${tip}">Elemental Gift <span class="resource-meta">BA fly · PB / LR</span></span>
+      <div class="resource-pips" data-resource="elementalGift"></div>
+    `;
+    const pipsBox = row.querySelector('.resource-pips');
+    for (let i = 0; i < max; i++) {
+      const pip = document.createElement('div');
+      pip.className = 'pip' + (i >= max - used ? ' used' : '');
+      pip.title = `Elemental Gift use ${i + 1}`;
+      pip.addEventListener('click', () => toggleIntModResource('elementalGiftFlyUsed', i, max));
+      pipsBox.appendChild(pip);
+    }
+    dynRows.appendChild(row);
   }
 
   // ---- Rage ---- (Barbarian L1+, Long Rest refill, Short Rest refunds 1)
@@ -6244,6 +6387,20 @@ function togglePactSlot(index, max) {
   const used = state.pactSlotsUsed || 0;
   const isAvailable = index < (max - used);
   state.pactSlotsUsed = isAvailable ? (max - index) : (max - index - 1);
+  saveState();
+  render();
+}
+
+// Magical Cunning button (Warlock 2+) — 1/Long Rest, refunds half pact slots
+// (rounded up); Eldritch Master at L20 upgrades this to ALL slots.
+function triggerMagicalCunning() {
+  const { w } = classBreakdown(state.level);
+  if (w < 2 || state.magicalCunningUsed) return;
+  const wlData = CLASS_DATA.warlock.perLevel[w];
+  if (!wlData || !wlData.pactSlots) return;
+  const refund = w >= 20 ? wlData.pactSlots.count : Math.ceil(wlData.pactSlots.count / 2);
+  state.pactSlotsUsed = Math.max(0, (state.pactSlotsUsed || 0) - refund);
+  state.magicalCunningUsed = true;
   saveState();
   render();
 }
@@ -6601,19 +6758,54 @@ function renderMagicCard(level) {
     }
   }
 
+  // Mystic Arcanum section (Warlock 11+) — appended to prepared list, separate header
+  const arcanum = state.mysticArcanum || {};
+  const arcanumLevels = Object.keys(arcanum).map(Number).filter(l => arcanum[l]).sort();
+  if (arcanumLevels.length > 0) {
+    const header = document.createElement('div');
+    header.className = 'spell-level-header';
+    header.textContent = `Mystic Arcanum · 1 / Long Rest each, no slot needed`;
+    preparedList.appendChild(header);
+    for (const lvl of arcanumLevels) {
+      const spellName = arcanum[lvl];
+      const spell = findSpellByName(spellName) || { name: spellName, level: ['','1st','2nd','3rd','4th','5th','6th','7th','8th','9th'][lvl], school: 'Warlock', range: '?', concentration: false };
+      const used = !!(state.mysticArcanumUsed || {})[lvl];
+      const row = document.createElement('div');
+      row.className = 'spell-row';
+      row.innerHTML = `
+        <span class="spell-name">${spell.name}${spell.concentration ? '<span class="conc-tag">C</span>' : ''}<span class="always-tag">Arcanum L${lvl}</span></span>
+        <span class="spell-meta">${spell.school || ''} · ${spell.range || ''}</span>
+        <span class="spell-actions">
+          <button class="spell-info" data-spell="${spell.name}" title="Spell details">ⓘ</button>
+          <button class="spell-cast arcanum-cast ${used ? 'used' : ''}" data-arcanum="${lvl}" data-spell="${spell.name}"${used ? ' disabled' : ''}>${used ? 'Spent' : 'Cast'}</button>
+        </span>
+      `;
+      preparedList.appendChild(row);
+    }
+  }
+
   // Wire info buttons (styled info modal)
   card.querySelectorAll('.spell-info').forEach(btn => {
     btn.addEventListener('click', () => {
-      const s = SPELLS.find(x => x.name === btn.dataset.spell);
+      const s = findSpellByName(btn.dataset.spell);
       if (!s) return;
       showSpellInfo(s);
     });
   });
 
-  // Wire cast buttons (slot-spending popover)
+  // Wire cast buttons (slot-spending popover for normal spells; direct toggle for arcanum)
   card.querySelectorAll('.spell-cast').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
+      // Arcanum: 1/Long Rest cast, no slot
+      if (btn.classList.contains('arcanum-cast')) {
+        const lvl = parseInt(btn.dataset.arcanum, 10);
+        state.mysticArcanumUsed = state.mysticArcanumUsed || {};
+        state.mysticArcanumUsed[lvl] = true;
+        saveState();
+        render();
+        return;
+      }
       const s = SPELLS.find(x => x.name === btn.dataset.spell);
       if (!s) return;
       openCastPopover(s, btn);
@@ -6822,6 +7014,13 @@ function renderAttackProfilesCard(level) {
   const { b, w } = classBreakdown(level);
   const stats = computeStats(level);
   const pb = profBonus(level);
+  const chaMod = mod(stats.cha);
+  const invocations = new Set(state.warlockInvocations || []);
+  const hasPactBlade = invocations.has('Pact of the Blade');
+  const hasLifedrinker = invocations.has('Lifedrinker');
+  const hasEldritchSmite = invocations.has('Eldritch Smite');
+  const hasThirstingBlade = invocations.has('Thirsting Blade') && w >= 5;
+  const hasDevouringBlade = invocations.has('Devouring Blade') && w >= 12;
 
   const profiles = [];
   const isRaging = !!state.rageActive;
@@ -6848,6 +7047,27 @@ function renderAttackProfilesCard(level) {
       extra: `${wpn.properties} · ${MASTERY_DESCRIPTIONS[wpn.mastery] || ''}`,
       ability: ability.toUpperCase() + (isStrAttack && isRaging ? ' · +' + rageBonus + ' Rage' : '')
     });
+  }
+
+  // Pact of the Blade — bonded weapon attack using CHA instead of STR/DEX
+  if (hasPactBlade) {
+    const pactWpn = WEAPONS_DATA.find(x => x.name === (state.pactWeaponName || 'Greatsword')) || WEAPONS_DATA.find(x => x.name === 'Greatsword');
+    if (pactWpn) {
+      const damageDie = pactWpn.damage.split(' ')[0];
+      const damageType = pactWpn.damage.split(' ')[1] === 'B' ? 'bludgeoning'
+                       : pactWpn.damage.split(' ')[1] === 'P' ? 'piercing' : 'slashing';
+      const lifedrinkBonus = hasLifedrinker ? ' + 1d6 (Lifedrinker)' : '';
+      // Note: Pact of the Blade lets you SWITCH damage type to Necrotic/Psychic/Radiant — display original here but flag
+      const attackBonus = pb + chaMod;
+      profiles.push({
+        name: 'Pact Weapon · ' + pactWpn.name,
+        subtitle: `Pact of the Blade · ${hasThirstingBlade ? (hasDevouringBlade ? '3 attacks/turn' : '2 attacks/turn') : '1 attack/turn'}`,
+        attack: attackBonus,
+        damage: `${damageDie} + ${chaMod} ${damageType}${lifedrinkBonus}`,
+        extra: `${pactWpn.properties} · damage type can be Necrotic / Psychic / Radiant or normal. ${hasEldritchSmite ? '<strong>Eldritch Smite:</strong> spend Pact slot for +1d8 force/slot level + Prone (Huge or smaller).' : ''}`,
+        ability: 'CHA (Pact)' + (hasLifedrinker ? ' · +1d6 N/P/R' : '')
+      });
+    }
   }
 
   if (profiles.length === 0) {
@@ -6878,6 +7098,32 @@ function renderAttackProfilesCard(level) {
     `;
     recklessRow.querySelector('#reckless-toggle-btn').addEventListener('click', toggleReckless);
     list.appendChild(recklessRow);
+  }
+
+  // Brutal Strike effect picker (Barb 9+) — forgo Reckless Advantage on one STR
+  // attack to add +1d10 (or +2d10 at Barb 17) damage and apply one effect.
+  if (b >= 9) {
+    const brutalDice = b >= 17 ? '+2d10' : '+1d10';
+    const brutalRow = document.createElement('div');
+    brutalRow.className = 'attack-toggle-row brutal-row';
+    const options = [{ id: 'none', label: 'None' }, { id: 'forceful', label: 'Forceful Blow (push 15 ft + advance)' }, { id: 'hamstring', label: 'Hamstring Blow (target Speed −15 ft)' }];
+    if (b >= 13) {
+      options.push({ id: 'staggering', label: 'Staggering Blow (Disadv save · no Opp Atks)' });
+      options.push({ id: 'sundering',  label: 'Sundering Blow (next attack +5 vs target)' });
+    }
+    const current = state.brutalStrikeEffect || 'none';
+    brutalRow.innerHTML = `
+      <div class="attack-toggle-label has-tip" title="Use only when Reckless Attacking. Forgo the Advantage on one STR-based attack to deal ${brutalDice} extra damage on hit AND apply one effect below. At Barb 17, you can apply TWO different effects.">Brutal Strike <span class="resource-meta">${brutalDice}</span></div>
+      <select id="brutal-strike-select" class="ancestry-select">
+        ${options.map(o => `<option value="${o.id}"${o.id === current ? ' selected' : ''}>${o.label}</option>`).join('')}
+      </select>
+    `;
+    brutalRow.querySelector('#brutal-strike-select').addEventListener('change', (e) => {
+      state.brutalStrikeEffect = e.target.value;
+      saveState();
+      render();
+    });
+    list.appendChild(brutalRow);
   }
 
   for (const p of profiles) {
@@ -7415,6 +7661,9 @@ function renderLevelTable(currentLevel) {
     if (entry.invocationsAdded && entry.invocationsAdded.length > 0) {
       parts.push(`<strong>+Invocations:</strong> ${entry.invocationsAdded.join(', ')}`);
     }
+    if (entry.mysticArcanumAdded) {
+      parts.push(`<strong>Mystic Arcanum (${entry.mysticArcanumAdded.level}):</strong> ${entry.mysticArcanumAdded.name}`);
+    }
     if (entry.plansAdded && entry.plansAdded.length > 0) {
       parts.push(`<strong>+Plans:</strong> ${entry.plansAdded.join(', ')}`);
     }
@@ -7733,9 +7982,34 @@ function buildSpellPickerHTML(klass, classLevel) {
   if (klass === 'warlock') {
     const invocDelta = computeInvocationDelta(classLevel);
     if (invocDelta > 0) html += buildInvocationPickerHTML(classLevel, invocDelta);
+
+    // Mystic Arcanum picker — fires once each at Warlock 11/13/15/17
+    const arcanumLevel = { 11: 6, 13: 7, 15: 8, 17: 9 }[classLevel];
+    if (arcanumLevel) html += buildMysticArcanumPickerHTML(arcanumLevel);
   }
 
   return html;
+}
+
+function buildMysticArcanumPickerHTML(spellLevel) {
+  // All Warlock spells of the given spell level, excluding any already picked as an arcanum.
+  const alreadyChosen = new Set(Object.values(state.mysticArcanum || {}));
+  const levelLabel = ['', '1st','2nd','3rd','4th','5th','6th','7th','8th','9th'][spellLevel];
+  const eligible = SPELLS.filter(s => s.level === levelLabel && !alreadyChosen.has(s.name));
+  eligible.sort((a, b) => a.name.localeCompare(b.name));
+  return `<div class="modal-prompt">
+    <div class="modal-prompt-label">Mystic Arcanum · pick one ${levelLabel}-level Warlock spell</div>
+    <div class="spell-picker" data-pick="mysticArcanum" data-max="1" data-arcanum-level="${spellLevel}">
+      ${eligible.map(s => `
+        <label class="spell-pick">
+          <input type="radio" name="mystic-arcanum" value="${s.name}">
+          <span class="spell-pick-name">${s.name}${s.concentration ? ' <span class="conc-tag">C</span>' : ''}</span>
+          <span class="spell-pick-meta">${s.school}</span>
+        </label>
+      `).join('')}
+    </div>
+    <div class="spell-picker-count" data-count-for="mysticArcanum">0 / 1</div>
+  </div>`;
 }
 
 // How many new Eldritch Invocations should we pick at this Warlock level?
@@ -8263,6 +8537,7 @@ function rebuildDerivedStateFromHistory() {
   state.languages = ['Common'];
   state.weaponMasteries = [];
   state.warlockInvocations = [];
+  state.mysticArcanum = {};
   let firstClassSet = false;
   for (const e of history) {
     const cls = CLASS_DATA[e.class];
@@ -8281,6 +8556,10 @@ function rebuildDerivedStateFromHistory() {
     if (e.cantripsAdded) state.cantripsKnown.push(...e.cantripsAdded);
     if (e.spellsAdded) state.preparedSpells.push(...e.spellsAdded);
     if (e.invocationsAdded) state.warlockInvocations.push(...e.invocationsAdded);
+    if (e.mysticArcanumAdded) {
+      state.mysticArcanum = state.mysticArcanum || {};
+      state.mysticArcanum[e.mysticArcanumAdded.level] = e.mysticArcanumAdded.name;
+    }
     if (e.plansAdded) state.infusionPlans.push(...e.plansAdded);
     if (e.classSkillsAdded) state.skillProfs.push(...e.classSkillsAdded);
     if (e.specializedDesign) {
@@ -8719,6 +8998,17 @@ function confirmLevelUp() {
     const picked = Array.from(invocationPicker.querySelectorAll('input:checked')).map(i => i.value);
     state.warlockInvocations = [...(state.warlockInvocations || []), ...picked];
     entry.invocationsAdded = picked;
+  }
+  // Mystic Arcanum pick (Warlock 11/13/15/17)
+  const arcanumPicker = document.querySelector('.spell-picker[data-pick="mysticArcanum"]');
+  if (arcanumPicker) {
+    const arcanumLevel = parseInt(arcanumPicker.dataset.arcanumLevel, 10);
+    const picked = arcanumPicker.querySelector('input:checked');
+    if (arcanumLevel && picked) {
+      state.mysticArcanum = state.mysticArcanum || {};
+      state.mysticArcanum[arcanumLevel] = picked.value;
+      entry.mysticArcanumAdded = { level: arcanumLevel, name: picked.value };
+    }
   }
 
   // Phase 2D: Origin Feat at character level 1, OR ASI/Feat at data.asi levels
@@ -9390,6 +9680,11 @@ document.getElementById('long-rest-btn').addEventListener('click', () => {
     state.recklessAttackOn = false;
     state.pactSlotsUsed = 0;
     state.magicalCunningUsed = false;
+    state.ancestryUsesUsed = 0;
+    state.bottledRespiteUsed = false;
+    state.elementalGiftFlyUsed = 0;
+    state.vesselHpCurrent = null;
+    state.mysticArcanumUsed = {};
     saveState();
     render();
   }, { okLabel: 'Long Rest' });
