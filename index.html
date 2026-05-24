@@ -5803,6 +5803,9 @@ const DEFAULT_STATE = {
   rageActive: false,         // currently raging right now
   recklessAttackOn: false,   // Reckless Attack toggled on for current turn
   brutalStrikeEffect: 'none',// current Brutal Strike effect at Barb 9+
+  elementalCleaverType: '',  // Path of the Giant L6: 'acid'/'cold'/'fire'/'thunder'/'lightning' (set on Rage entry)
+  pactWeaponDamageType: 'normal', // Pact of the Blade: 'normal' or 'Necrotic'/'Psychic'/'Radiant'
+  genieWrathUsedTurn: false, // 1/turn: Genie's Wrath +PB damage flag (manually reset on new turn)
   // Warlock Pact Magic + Invocations tracking
   pactSlotsUsed: 0,          // count of Pact Magic slots spent (short-rest recovery)
   warlockInvocations: [],    // names of Eldritch Invocations currently known
@@ -6621,20 +6624,38 @@ function triggerMagicalCunning() {
 }
 
 // Rage button: Enter Rage spends a pip + flips active; End Rage just flips active off (no pip refund).
+// Entering Rage prompts to break Concentration; ending Rage clears Elemental Cleaver + Reckless.
 function toggleRage(ragesMax) {
   const used = state.ragesUsed || 0;
   if (state.rageActive) {
-    // End Rage — no pip refund
+    // End Rage — no pip refund. Clear Reckless + Elemental Cleaver damage type.
     state.rageActive = false;
-    state.recklessAttackOn = false; // Reckless implicitly ends with Rage
+    state.recklessAttackOn = false;
+    state.elementalCleaverType = '';
+    saveState();
+    render();
   } else {
     // Enter Rage — must have an available pip
     if (used >= ragesMax) return;
+    // If concentrating, warn — entering Rage breaks Concentration per RAW
+    if (state.concentratingOn) {
+      showConfirm('Entering Rage breaks Concentration',
+        `<p>You're currently concentrating on <strong>${state.concentratingOn}</strong>. Entering Rage prevents you from maintaining Concentration, so this spell will end.</p><p>Continue?</p>`,
+        () => {
+          state.ragesUsed = used + 1;
+          state.rageActive = true;
+          state.concentratingOn = null;
+          saveState();
+          render();
+        },
+        { okLabel: 'Enter Rage (end Concentration)' });
+      return;
+    }
     state.ragesUsed = used + 1;
     state.rageActive = true;
+    saveState();
+    render();
   }
-  saveState();
-  render();
 }
 
 // Reckless Attack toggle (Barbarian L2+, in-combat flag)
@@ -7323,6 +7344,19 @@ function renderAttackProfilesCard(level) {
   const rageBonus = (isRaging && b >= 1) ? CLASS_DATA.barbarian.perLevel[b].rageDamage : 0;
   const extraAttack = b >= 5;
 
+  // Hex concentration check — adds +1d6 necrotic to every weapon hit
+  const concentratingOnHex = state.concentratingOn === 'Hex';
+  // Genie's Wrath available (Warlock 3+ Genie Patron, 1/turn on hit)
+  const hasGeniesWrath = w >= 3 && findChosenSubclass('warlock') === 'Genie Patron';
+  const genieKind = hasGeniesWrath ? (CLASS_DATA.warlock.subclassData['Genie Patron'].kind || 'Efreeti') : null;
+  const genieDmgType = hasGeniesWrath ? (CLASS_DATA.warlock.subclassData['Genie Patron'].kindDamageType || 'fire') : null;
+  // Elemental Cleaver bonded weapon (raging + Barb 6+ Path of the Giant)
+  const isPotG = findChosenSubclass('barbarian') === 'Path of the Giant';
+  const cleaverActive = isRaging && b >= 6 && isPotG && state.elementalCleaverType;
+  const cleaverExtra = b >= 14 ? '2d6' : '1d6';
+  const brutalActive = b >= 9 && state.brutalStrikeEffect && state.brutalStrikeEffect !== 'none';
+  const brutalDice = b >= 17 ? '+2d10' : '+1d10';
+
   // Each weapon mastery picked — auto-builds an attack profile per weapon
   for (const name of state.weaponMasteries || []) {
     const wpn = WEAPONS_DATA.find(x => x.name === name);
@@ -7334,10 +7368,24 @@ function renderAttackProfilesCard(level) {
     const damageDie = wpn.damage.split(' ')[0];
     const damageType = wpn.damage.split(' ')[1] === 'B' ? 'bludgeoning'
                      : wpn.damage.split(' ')[1] === 'P' ? 'piercing' : 'slashing';
-    const damageStr = `${damageDie} + ${abilityMod}${rageBonusOnThis > 0 ? ` + ${rageBonusOnThis} (Rage)` : ''} ${damageType}`;
+    // Build damage line with all stacking modifiers visible
+    const damageParts = [`${damageDie} + ${abilityMod}`];
+    if (rageBonusOnThis > 0) damageParts.push(`+ ${rageBonusOnThis} (Rage)`);
+    if (concentratingOnHex) damageParts.push(`+ 1d6 necrotic (Hex)`);
+    if (cleaverActive && wpn.name === (state.pactWeaponName || 'Greatsword')) {
+      damageParts.push(`+ ${cleaverExtra} ${state.elementalCleaverType} (Cleaver)`);
+    }
+    if (hasGeniesWrath && !state.genieWrathUsedTurn) damageParts.push(`+ ${pb} ${genieDmgType} (Genie's Wrath, 1/turn)`);
+    if (brutalActive && isStrAttack) damageParts.push(`${brutalDice} (Brutal Strike)`);
+    const damageStr = damageParts.join(' ') + ' ' + (cleaverActive && wpn.name === (state.pactWeaponName || 'Greatsword') ? state.elementalCleaverType : damageType);
+    const flagParts = [];
+    if (isStrAttack && isRaging) flagParts.push('RAGING');
+    if (concentratingOnHex) flagParts.push('Hex');
+    if (cleaverActive && wpn.name === (state.pactWeaponName || 'Greatsword')) flagParts.push('Cleaver');
+    if (brutalActive) flagParts.push('Brutal');
     profiles.push({
       name: wpn.name,
-      subtitle: `Mastery · ${wpn.mastery}${isStrAttack && isRaging ? ' · RAGING' : ''}`,
+      subtitle: `Mastery · ${wpn.mastery}${flagParts.length ? ' · ' + flagParts.join(' · ') : ''}`,
       attack: pb + abilityMod,
       damage: damageStr,
       extra: `${wpn.properties} · ${MASTERY_DESCRIPTIONS[wpn.mastery] || ''}`,
@@ -7372,18 +7420,18 @@ function renderAttackProfilesCard(level) {
     const pactWpn = WEAPONS_DATA.find(x => x.name === (state.pactWeaponName || 'Greatsword')) || WEAPONS_DATA.find(x => x.name === 'Greatsword');
     if (pactWpn) {
       const damageDie = pactWpn.damage.split(' ')[0];
-      const damageType = pactWpn.damage.split(' ')[1] === 'B' ? 'bludgeoning'
+      const normalType = pactWpn.damage.split(' ')[1] === 'B' ? 'bludgeoning'
                        : pactWpn.damage.split(' ')[1] === 'P' ? 'piercing' : 'slashing';
-      const lifedrinkBonus = hasLifedrinker ? ' + 1d6 (Lifedrinker)' : '';
-      // Note: Pact of the Blade lets you SWITCH damage type to Necrotic/Psychic/Radiant — display original here but flag
+      const chosenType = (state.pactWeaponDamageType && state.pactWeaponDamageType !== 'normal') ? state.pactWeaponDamageType.toLowerCase() : normalType;
+      const lifedrinkBonus = hasLifedrinker ? ' + 1d6 N/P/R (Lifedrinker)' : '';
       const attackBonus = pb + chaMod;
       profiles.push({
         name: 'Pact Weapon · ' + pactWpn.name,
         subtitle: `Pact of the Blade · ${hasThirstingBlade ? (hasDevouringBlade ? '3 attacks/turn' : '2 attacks/turn') : '1 attack/turn'}`,
         attack: attackBonus,
-        damage: `${damageDie} + ${chaMod} ${damageType}${lifedrinkBonus}`,
-        extra: `${pactWpn.properties} · damage type can be Necrotic / Psychic / Radiant or normal. ${hasEldritchSmite ? '<strong>Eldritch Smite:</strong> spend Pact slot for +1d8 force/slot level + Prone (Huge or smaller).' : ''}`,
-        ability: 'CHA (Pact)' + (hasLifedrinker ? ' · +1d6 N/P/R' : '')
+        damage: `${damageDie} + ${chaMod} ${chosenType}${lifedrinkBonus}`,
+        extra: `${pactWpn.properties} · damage type swappable (selector below). ${hasEldritchSmite ? '<strong>Eldritch Smite:</strong> spend Pact slot on hit for +1d8 force/slot level + Prone (Huge or smaller).' : ''}`,
+        ability: 'CHA (Pact)' + (hasLifedrinker ? ' · +1d6' : '')
       });
     }
   }
@@ -7425,7 +7473,7 @@ function renderAttackProfilesCard(level) {
     const pactWeaponRow = document.createElement('div');
     pactWeaponRow.className = 'attack-toggle-row';
     pactWeaponRow.innerHTML = `
-      <div class="attack-toggle-label has-tip" title="Choose the weapon your patron conjures when you summon your pact weapon. Simple or Martial Melee. Damage type can be the weapon's normal type or Necrotic, Psychic, or Radiant.">Pact Weapon</div>
+      <div class="attack-toggle-label has-tip" title="Choose the weapon your patron conjures when you summon your pact weapon. Simple or Martial Melee.">Pact Weapon</div>
       <select id="pact-weapon-select" class="ancestry-select">
         ${martialMelees.map(wp => `<option value="${wp.name}"${wp.name === current ? ' selected' : ''}>${wp.name} (${wp.damage})</option>`).join('')}
       </select>
@@ -7436,6 +7484,88 @@ function renderAttackProfilesCard(level) {
       render();
     });
     list.appendChild(pactWeaponRow);
+
+    // Pact weapon damage type swap (Necrotic/Psychic/Radiant or normal)
+    const dtRow = document.createElement('div');
+    dtRow.className = 'attack-toggle-row';
+    const currentDt = state.pactWeaponDamageType || 'normal';
+    dtRow.innerHTML = `
+      <div class="attack-toggle-label has-tip" title="With Pact of the Blade you can change the damage type of each strike to Necrotic, Psychic, or Radiant (or keep the weapon's normal type).">Pact Damage Type</div>
+      <select id="pact-damage-type-select" class="ancestry-select">
+        <option value="normal"${currentDt === 'normal' ? ' selected' : ''}>Normal (weapon's type)</option>
+        <option value="Necrotic"${currentDt === 'Necrotic' ? ' selected' : ''}>Necrotic</option>
+        <option value="Psychic"${currentDt === 'Psychic' ? ' selected' : ''}>Psychic</option>
+        <option value="Radiant"${currentDt === 'Radiant' ? ' selected' : ''}>Radiant</option>
+      </select>
+    `;
+    dtRow.querySelector('#pact-damage-type-select').addEventListener('change', (e) => {
+      state.pactWeaponDamageType = e.target.value;
+      saveState();
+      render();
+    });
+    list.appendChild(dtRow);
+
+    // Eldritch Smite explicit button (Warlock 5+ with Pact of the Blade)
+    if (hasEldritchSmite && w >= 5) {
+      const wlData = CLASS_DATA.warlock.perLevel[w];
+      const slotLvl = wlData.pactSlots.level;
+      const slotsAvail = wlData.pactSlots.count - (state.pactSlotsUsed || 0);
+      const smiteDice = `${slotLvl + 1}d8`; // 1d8 base + 1d8 per slot level
+      const smiteRow = document.createElement('div');
+      smiteRow.className = 'attack-toggle-row';
+      smiteRow.innerHTML = `
+        <div class="attack-toggle-label has-tip" title="Once per turn when you hit with your pact weapon, spend a Pact Magic spell slot to deal +1d8 Force damage per spell-slot level. If the target is Huge or smaller, you can also impose the Prone condition.">Eldritch Smite <span class="resource-meta">${smiteDice} force · ${slotsAvail} slot(s) left</span></div>
+        <button class="rage-btn" id="eldritch-smite-btn"${slotsAvail < 1 ? ' disabled' : ''}>${slotsAvail < 1 ? 'No slot' : 'Smite (spend slot)'}</button>
+      `;
+      smiteRow.querySelector('#eldritch-smite-btn').addEventListener('click', () => {
+        if ((state.pactSlotsUsed || 0) >= wlData.pactSlots.count) return;
+        state.pactSlotsUsed = (state.pactSlotsUsed || 0) + 1;
+        saveState();
+        render();
+      });
+      list.appendChild(smiteRow);
+    }
+  }
+
+  // Genie's Wrath 1/turn tracker (Warlock 3+ Genie Patron)
+  if (hasGeniesWrath) {
+    const used = !!state.genieWrathUsedTurn;
+    const wrathRow = document.createElement('div');
+    wrathRow.className = 'attack-toggle-row';
+    wrathRow.innerHTML = `
+      <div class="attack-toggle-label has-tip" title="Once during each of your turns when you hit with an attack roll, you can deal extra ${genieDmgType} damage equal to your Proficiency Bonus. Click to mark used / toggle back at start of your next turn.">Genie's Wrath <span class="resource-meta">+${pb} ${genieDmgType} · 1/turn</span></div>
+      <button class="rage-btn ${used ? 'raging' : ''}" id="genie-wrath-btn">${used ? 'Used (reset on new turn)' : 'Ready'}</button>
+    `;
+    wrathRow.querySelector('#genie-wrath-btn').addEventListener('click', () => {
+      state.genieWrathUsedTurn = !state.genieWrathUsedTurn;
+      saveState();
+      render();
+    });
+    list.appendChild(wrathRow);
+  }
+
+  // Elemental Cleaver damage type picker (Barb 6+ Path of the Giant)
+  if (b >= 6 && isPotG) {
+    const cleaverRow = document.createElement('div');
+    cleaverRow.className = 'attack-toggle-row';
+    const current = state.elementalCleaverType || '';
+    cleaverRow.innerHTML = `
+      <div class="attack-toggle-label has-tip" title="When you enter your rage, you can choose one weapon you're holding and infuse it with acid, cold, fire, thunder, or lightning. While wielded during the rage: its damage type changes to the chosen type, it deals +${b >= 14 ? '2d6' : '1d6'} extra of that type on hit, and it gains the Thrown property (20/60). Bonus Action while raging to switch the type. Set when raging; clear when rage ends.">Elemental Cleaver <span class="resource-meta">+${b >= 14 ? '2d6' : '1d6'} · choose on Rage entry</span></div>
+      <select id="elemental-cleaver-select" class="ancestry-select">
+        <option value=""${!current ? ' selected' : ''}>— off / not raging —</option>
+        <option value="acid"${current === 'acid' ? ' selected' : ''}>Acid</option>
+        <option value="cold"${current === 'cold' ? ' selected' : ''}>Cold</option>
+        <option value="fire"${current === 'fire' ? ' selected' : ''}>Fire</option>
+        <option value="thunder"${current === 'thunder' ? ' selected' : ''}>Thunder</option>
+        <option value="lightning"${current === 'lightning' ? ' selected' : ''}>Lightning</option>
+      </select>
+    `;
+    cleaverRow.querySelector('#elemental-cleaver-select').addEventListener('change', (e) => {
+      state.elementalCleaverType = e.target.value;
+      saveState();
+      render();
+    });
+    list.appendChild(cleaverRow);
   }
 
   // Brutal Strike effect picker (Barb 9+) — forgo Reckless Advantage on one STR
@@ -10169,6 +10299,8 @@ document.getElementById('long-rest-btn').addEventListener('click', () => {
     state.ragesUsed = 0;
     state.rageActive = false;
     state.recklessAttackOn = false;
+    state.elementalCleaverType = '';
+    state.genieWrathUsedTurn = false;
     state.pactSlotsUsed = 0;
     state.magicalCunningUsed = false;
     state.ancestryUsesUsed = 0;
