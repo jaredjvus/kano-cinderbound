@@ -1634,6 +1634,48 @@ body.dm-mode .infusion-row input { pointer-events: none; opacity: 0.5; }
   margin-right: 0.5rem;
 }
 
+/* Sanctuary Vessel occupants strip */
+.vessel-occupants-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  flex: 1;
+  justify-content: flex-end;
+}
+.vessel-occupant-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(217, 32, 32, 0.15);
+  border: 1px solid var(--gold-tarnish);
+  color: var(--parchment);
+  font-family: 'EB Garamond', serif;
+  font-size: 0.85rem;
+}
+.vessel-occupant-remove {
+  background: transparent;
+  border: none;
+  color: var(--blood-bright);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+}
+.vessel-occupant-input {
+  background: transparent;
+  border: 1px dashed var(--gold-tarnish);
+  color: var(--parchment);
+  font-family: 'EB Garamond', serif;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.5rem;
+  width: 9rem;
+}
+.vessel-occupant-input:focus { outline: none; border-color: var(--gold); }
+body.dm-mode .vessel-occupant-input,
+body.dm-mode .vessel-occupant-remove { pointer-events: none; opacity: 0.6; }
+
 /* Spell stat row at top of Magic card */
 .spell-stat-row {
   display: grid;
@@ -5886,6 +5928,14 @@ const DEFAULT_STATE = {
   // Player edits inline at the Magic card. Refreshed each Short/Long Rest by RAW; sticky here for simplicity.
   tomeCantrips: ['', '', ''],
   tomeRitualSpells: ['', ''],
+  // Relentless Rage DC (Barb 11+): starts at 10, +5 each use, resets on Short or Long Rest
+  relentlessRageDC: 10,
+  // Persistent Rage Initiative-refill (Barb 15+): 1/Long Rest
+  persistentRageRefillUsed: false,
+  // Limited Wish cooldown (Warlock 14+ Genie): 1d4 Long Rests remaining
+  limitedWishCooldown: 0,
+  // Sanctuary Vessel occupants (Warlock 10+ Genie): array of names inside the vessel
+  vesselOccupants: [],
   // Warlock Pact Magic + Invocations tracking
   pactSlotsUsed: 0,          // count of Pact Magic slots spent (short-rest recovery)
   warlockInvocations: [],    // names of Eldritch Invocations currently known
@@ -6047,8 +6097,18 @@ function computeStats(level) {
     if (!a.gains) continue;
     for (const [k, v] of Object.entries(a.gains)) stats[k] = (stats[k] || 0) + v;
   }
-  // Cap at 20
-  for (const k of Object.keys(stats)) stats[k] = Math.min(20, stats[k]);
+  // Primal Champion (Barbarian 20): +4 STR / +4 CON, max for those raised to 25
+  const { b } = classBreakdown(level);
+  const primalChampion = b >= 20;
+  if (primalChampion) {
+    stats.str = (stats.str || 0) + 4;
+    stats.con = (stats.con || 0) + 4;
+  }
+  // Cap at 20 normally; 25 for STR/CON when Primal Champion is active
+  for (const k of Object.keys(stats)) {
+    const cap = (primalChampion && (k === 'str' || k === 'con')) ? 25 : 20;
+    stats[k] = Math.min(cap, stats[k]);
+  }
   return stats;
 }
 
@@ -6488,6 +6548,45 @@ function renderCombatResources(level) {
     dynRows.appendChild(respiteRow);
   }
 
+  // ---- Sanctuary Vessel occupants ---- (Warlock 10+ Genie Patron)
+  if (w >= 10 && findChosenSubclass('warlock') === 'Genie Patron') {
+    const occupants = state.vesselOccupants || [];
+    const row = document.createElement('div');
+    row.className = 'resource-row vessel-occupants-row';
+    const tip = `When you Bottled Respite, you can also draw up to 5 willing creatures within 30 ft into the vessel with you. Anyone who remains inside for 10 minutes gains the benefit of a Short Rest. Bonus Action to eject any number of creatures.`;
+    row.innerHTML = `
+      <span class="resource-label has-tip" title="${tip.replace(/"/g, '&quot;')}">Vessel Occupants <span class="resource-meta">${occupants.length} / 5 inside</span></span>
+      <div class="vessel-occupants-list" id="vessel-occupants-list"></div>
+    `;
+    const list = row.querySelector('#vessel-occupants-list');
+    occupants.forEach((name, idx) => {
+      const chip = document.createElement('span');
+      chip.className = 'vessel-occupant-chip';
+      chip.innerHTML = `${name} <button class="vessel-occupant-remove" data-idx="${idx}" title="Eject">&times;</button>`;
+      chip.querySelector('button').addEventListener('click', () => {
+        state.vesselOccupants.splice(idx, 1);
+        saveState();
+        render();
+      });
+      list.appendChild(chip);
+    });
+    if (occupants.length < 5) {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = '+ add occupant';
+      input.className = 'vessel-occupant-input';
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && input.value.trim()) {
+          state.vesselOccupants = [...(state.vesselOccupants || []), input.value.trim()];
+          saveState();
+          render();
+        }
+      });
+      list.appendChild(input);
+    }
+    dynRows.appendChild(row);
+  }
+
   // ---- Elemental Gift fly uses ---- (Warlock 6+ Genie Patron: BA fly speed 30 ft, PB/LR)
   if (w >= 6 && findChosenSubclass('warlock') === 'Genie Patron') {
     const max = pb;
@@ -6537,6 +6636,79 @@ function renderCombatResources(level) {
     }
     row.querySelector('#rage-toggle-btn').addEventListener('click', () => toggleRage(ragesMax));
     dynRows.appendChild(row);
+
+    // Relentless Rage DC tracker (Barb 11+) — DC 10 + 5 per use, resets on rest
+    if (b >= 11) {
+      const currentDC = state.relentlessRageDC || 10;
+      const rrRow = document.createElement('div');
+      rrRow.className = 'resource-row';
+      const rrTip = `If dropped to 0 HP while raging (not killed outright), make a Constitution save at DC ${currentDC}. On success: HP changes to ${2 * b} (twice your Barbarian level). DC +5 each subsequent use; resets to 10 on a Short or Long Rest.`;
+      rrRow.innerHTML = `
+        <span class="resource-label has-tip" title="${rrTip}">Relentless Rage <span class="resource-meta">CON save DC ${currentDC}</span></span>
+        <button class="rage-btn" id="relentless-rage-btn">Triggered (+5)</button>
+      `;
+      rrRow.querySelector('#relentless-rage-btn').addEventListener('click', () => {
+        showConfirm('Relentless Rage triggered?',
+          `<p>You dropped to 0 HP while raging. Make the CON save (DC <strong>${currentDC}</strong>) at the table. On a success, set HP to <strong>${2 * b}</strong>.</p><p>This will raise the DC to <strong>${currentDC + 5}</strong> for the next trigger (resets on a Short or Long Rest).</p>`,
+          () => {
+            state.relentlessRageDC = currentDC + 5;
+            saveState();
+            render();
+          },
+          { okLabel: 'Mark Triggered' });
+      });
+      dynRows.appendChild(rrRow);
+    }
+
+    // Persistent Rage Initiative-refill (Barb 15+, 1/Long Rest)
+    if (b >= 15) {
+      const usedAlready = !!state.persistentRageRefillUsed;
+      const prRow = document.createElement('div');
+      prRow.className = 'resource-row';
+      const prTip = `When you roll Initiative, you can regain all expended uses of Rage. Once per Long Rest.`;
+      prRow.innerHTML = `
+        <span class="resource-label has-tip" title="${prTip}">Persistent Rage Refill <span class="resource-meta">${usedAlready ? 'USED · LR to reset' : 'Initiative refill ready'}</span></span>
+        <button class="rage-btn ${usedAlready ? 'used' : ''}" id="persistent-rage-refill-btn"${usedAlready ? ' disabled' : ''}>${usedAlready ? 'Used' : 'Refill on Initiative'}</button>
+      `;
+      prRow.querySelector('#persistent-rage-refill-btn').addEventListener('click', () => {
+        if (state.persistentRageRefillUsed) return;
+        state.ragesUsed = 0;
+        state.persistentRageRefillUsed = true;
+        saveState();
+        render();
+      });
+      dynRows.appendChild(prRow);
+    }
+  }
+
+  // ---- Limited Wish cooldown ---- (Warlock 14+ Genie Patron, 1d4 LR cooldown)
+  if (w >= 14 && findChosenSubclass('warlock') === 'Genie Patron') {
+    const cd = state.limitedWishCooldown || 0;
+    const lwRow = document.createElement('div');
+    lwRow.className = 'resource-row';
+    const lwTip = `Action: request the effect of one spell of level 6 or lower (any class's spell list) with a casting time of 1 Action. You don't need to meet requirements (including costly components). Once used, can't use again until you finish 1d4 Long Rests.`;
+    lwRow.innerHTML = `
+      <span class="resource-label has-tip" title="${lwTip}">Limited Wish <span class="resource-meta">${cd > 0 ? `${cd} LR${cd > 1 ? 's' : ''} remaining` : 'Ready'}</span></span>
+      <button class="rage-btn ${cd > 0 ? 'used' : ''}" id="limited-wish-btn"${cd > 0 ? ' disabled' : ''}>${cd > 0 ? 'Cooldown' : 'Use Limited Wish'}</button>
+    `;
+    lwRow.querySelector('#limited-wish-btn').addEventListener('click', () => {
+      if ((state.limitedWishCooldown || 0) > 0) return;
+      showConfirm('Use Limited Wish?',
+        `<p>Roll a d4 to determine how many Long Rests you must finish before using this feature again.</p><div style="margin:0.8rem 0; display:flex; gap:0.4rem; justify-content:center;">${[1,2,3,4].map(n => `<button class="rage-btn" data-roll="${n}" style="padding:0.3rem 0.7rem;">${n}</button>`).join('')}</div>`,
+        () => {}, { okLabel: 'Cancel', cancelLabel: 'Close' });
+      // Wire the inline d4 buttons after the modal mounts
+      setTimeout(() => {
+        document.querySelectorAll('#confirm-body button[data-roll]').forEach(b => {
+          b.addEventListener('click', () => {
+            state.limitedWishCooldown = parseInt(b.dataset.roll, 10);
+            closeConfirmModal();
+            saveState();
+            render();
+          });
+        });
+      }, 0);
+    });
+    dynRows.appendChild(lwRow);
   }
 
   // ---- Hit Dice ---- (mixed dice for multiclass; meta shows the breakdown)
@@ -6977,6 +7149,12 @@ function renderCombatStatus(level) {
     ragingLines.push(`Resistance to <strong>Bludgeoning, Piercing, Slashing</strong>`);
     ragingLines.push(`Advantage on Strength checks &amp; Strength saves`);
     ragingLines.push(`Can't cast spells or maintain Concentration`);
+    if (b >= 7) {
+      ragingLines.push(`<strong>Instinctive Pounce</strong>: as part of entering Rage, move up to half your Speed (free).`);
+    }
+    if (b >= 15) {
+      ragingLines.push(`<strong>Persistent Rage</strong>: lasts 10 minutes — ends only on Unconscious or doffing Heavy armor.`);
+    }
     // Path of the Giant additions while raging
     const barbSub = findChosenSubclass('barbarian');
     if (b >= 3 && barbSub === 'Path of the Giant') {
@@ -7047,6 +7225,16 @@ function renderConditions() {
     pill.title = CONDITION_DESCRIPTIONS[key] || '';
     pill.addEventListener('click', () => {
       state.conditions[key] = !state.conditions[key];
+      // RAW: Rage ends if you become Incapacitated (or only Unconscious at Barb 15+).
+      if (state.rageActive) {
+        const { b } = classBreakdown(state.level);
+        const rageEnder = b >= 15 ? 'unconscious' : (key === 'unconscious' ? 'unconscious' : 'incapacitated');
+        if (state.conditions[rageEnder]) {
+          state.rageActive = false;
+          state.recklessAttackOn = false;
+          state.elementalCleaverType = '';
+        }
+      }
       saveState();
       render(); // condition flips can change Speed and other displayed stats
     });
@@ -10470,6 +10658,7 @@ document.getElementById('short-rest-btn').addEventListener('click', () => {
   showConfirm('Take a Short Rest?', body, () => {
     if (recoversRage) state.ragesUsed = Math.max(0, state.ragesUsed - 1);
     if (recoversPactMagic) state.pactSlotsUsed = 0;
+    state.relentlessRageDC = 10; // Relentless Rage DC resets on Short or Long Rest
     saveState();
     render();
   }, { okLabel: 'Short Rest' });
@@ -10507,7 +10696,12 @@ document.getElementById('long-rest-btn').addEventListener('click', () => {
     state.bottledRespiteUsed = false;
     state.elementalGiftFlyUsed = 0;
     state.vesselHpCurrent = null;
+    state.vesselOccupants = [];
     state.mysticArcanumUsed = {};
+    state.relentlessRageDC = 10;
+    state.persistentRageRefillUsed = false;
+    // Limited Wish: decrement cooldown by 1 each Long Rest (min 0)
+    state.limitedWishCooldown = Math.max(0, (state.limitedWishCooldown || 0) - 1);
     saveState();
     render();
   }, { okLabel: 'Long Rest' });
