@@ -7055,9 +7055,14 @@ function renderConditions() {
 function renderConcentrationOptions(level) {
   const sel = document.getElementById('concentration-select');
   sel.innerHTML = '<option value="">— not concentrating —</option>';
-  // Concentration options = prepared spells flagged concentration: true, looked up
-  // in SPELLS first and falling back to subclass-expanded lists.
-  const known = new Set(state.preparedSpells || []);
+  // Concentration options = known cantrips + prepared spells flagged concentration: true,
+  // looked up in SPELLS first and falling back to subclass-expanded lists.
+  const known = new Set([
+    ...(state.cantripsKnown || []),
+    ...(state.preparedSpells || [])
+  ]);
+  // Always include the currently-concentrating spell so the option doesn't disappear
+  if (state.concentratingOn) known.add(state.concentratingOn);
   const options = [...known].map(findSpellByName).filter(s => s && s.concentration);
   options.sort((a, b) => {
     const da = spellLevelToNum(a.level) - spellLevelToNum(b.level);
@@ -8006,15 +8011,32 @@ function openCastPopover(spell, anchor) {
       opt.innerHTML = `<span>${t.label}</span><span class="tier-count">×${remaining}</span>`;
       opt.addEventListener('click', (e) => {
         e.stopPropagation();
-        // Pact slots live on state.pactSlotsUsed; legacy half-caster keys on state.usedSlots
-        if (t.key === 'pact') {
-          state.pactSlotsUsed = (state.pactSlotsUsed || 0) + 1;
-        } else {
-          state.usedSlots[t.key] = (state.usedSlots[t.key] || 0) + 1;
+        const finalize = () => {
+          // Spend the slot
+          if (t.key === 'pact') {
+            state.pactSlotsUsed = (state.pactSlotsUsed || 0) + 1;
+          } else {
+            state.usedSlots[t.key] = (state.usedSlots[t.key] || 0) + 1;
+          }
+          // If this spell requires concentration, take it over now
+          if (spell.concentration) {
+            state.concentratingOn = spell.name;
+          }
+          saveState();
+          closeCastPopover();
+          render();
+        };
+        // Concentration handoff: warn if casting a Concentration spell while
+        // already concentrating on something different.
+        if (spell.concentration && state.concentratingOn && state.concentratingOn !== spell.name) {
+          closeCastPopover();
+          showConfirm('Break Concentration?',
+            `<p>Casting <strong>${spell.name}</strong> will break your current Concentration on <strong>${state.concentratingOn}</strong>.</p><p>Continue?</p>`,
+            finalize,
+            { okLabel: `Cast ${spell.name}` });
+          return;
         }
-        saveState();
-        closeCastPopover();
-        render();
+        finalize();
       });
       pop.appendChild(opt);
     }
