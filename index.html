@@ -867,6 +867,13 @@ body::before {
   cursor: pointer;
 }
 .spell-row .spell-cast:hover { background: var(--gold); color: #fff; }
+.spell-row .cantrip-cast { font-size: 0.7rem; }
+.spell-row .cantrip-cast.concentrating {
+  background: var(--gold);
+  color: var(--ink);
+  border-color: var(--gold-bright);
+}
+.spell-row .cantrip-cast.concentrating:hover { background: var(--gold-bright); }
 .spell-row .spell-cast.used,
 .spell-row .spell-cast:disabled {
   color: var(--parchment-dim);
@@ -7126,10 +7133,18 @@ function renderMagicCard(level) {
     for (const s of cantrips) {
       const row = document.createElement('div');
       row.className = 'spell-row';
+      // Cast button only for Concentration cantrips — no slot cost, just sets
+      // state.concentratingOn (with takeover warn). Other cantrips don't need it.
+      const castBtn = s.concentration
+        ? `<button class="spell-cast cantrip-cast${state.concentratingOn === s.name ? ' concentrating' : ''}" data-spell="${s.name}">${state.concentratingOn === s.name ? 'Concentrating' : 'Cast (Conc.)'}</button>`
+        : '';
       row.innerHTML = `
         <span class="spell-name">${s.name}${s.concentration ? '<span class="conc-tag">C</span>' : ''}</span>
         <span class="spell-meta">${s.school} · ${s.range} · ${s.time}</span>
-        <button class="spell-info" data-spell="${s.name}" title="Spell details">ⓘ</button>
+        <span class="spell-actions">
+          <button class="spell-info" data-spell="${s.name}" title="Spell details">ⓘ</button>
+          ${castBtn}
+        </span>
       `;
       cantripList.appendChild(row);
     }
@@ -7247,7 +7262,7 @@ function renderMagicCard(level) {
     });
   });
 
-  // Wire cast buttons (slot-spending popover for normal spells; direct toggle for arcanum)
+  // Wire cast buttons (slot-spending popover for normal spells; direct toggle for arcanum + concentration cantrips)
   card.querySelectorAll('.spell-cast').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -7260,6 +7275,32 @@ function renderMagicCard(level) {
         render();
         return;
       }
+      // Concentration cantrip: no slot cost, just claim Concentration (with takeover warn)
+      if (btn.classList.contains('cantrip-cast')) {
+        const spellName = btn.dataset.spell;
+        // If already concentrating on this exact cantrip, treat the click as "end Concentration"
+        if (state.concentratingOn === spellName) {
+          state.concentratingOn = null;
+          saveState();
+          render();
+          return;
+        }
+        const finalize = () => {
+          state.concentratingOn = spellName;
+          saveState();
+          render();
+        };
+        if (state.concentratingOn && state.concentratingOn !== spellName) {
+          showConfirm('Break Concentration?',
+            `<p>Casting <strong>${spellName}</strong> will break your current Concentration on <strong>${state.concentratingOn}</strong>.</p><p>Continue?</p>`,
+            finalize,
+            { okLabel: `Cast ${spellName}` });
+          return;
+        }
+        finalize();
+        return;
+      }
+      // Regular prepared spell: open slot-spending popover
       const s = SPELLS.find(x => x.name === btn.dataset.spell);
       if (!s) return;
       openCastPopover(s, btn);
