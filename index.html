@@ -3658,158 +3658,114 @@ const _LEVEL_DATA_PLACEHOLDER_HEAD = [
   { warlock: 4, sorcerer: 16, classGain: 'ASI / Feat (final character level)', asi: { con: 2 } }
 ];
 
-// Full 2024 Artificer prepared spell catalog (Eberron: Forge of the Artificer).
-// `concentration: true` is set wherever the duration is "C, up to ..." so the
+// Full 2024 PHB Warlock spell list (parsed from http://dnd2024.wikidot.com/warlock:spell-list).
+// `concentration: true` is set where the duration starts with "C, up to..." so the
 // concentration tracker can filter from this catalog.
 const SPELLS = [
   // ===== CANTRIPS =====
-  { name: 'Acid Splash',         level: 'Cantrip', school: 'Evocation',    time: 'Action',       range: '60 feet',  components: 'V, S',    duration: 'Instantaneous' },
-  { name: 'Dancing Lights',      level: 'Cantrip', school: 'Illusion',     time: 'Action',       range: '120 feet', components: 'V, S, M', duration: 'C, up to 1 minute', concentration: true },
-  { name: 'Elementalism',        level: 'Cantrip', school: 'Transmutation',time: 'Action',       range: '30 feet',  components: 'V, S',    duration: 'Instantaneous' },
-  { name: 'Fire Bolt',           level: 'Cantrip', school: 'Evocation',    time: 'Action',       range: '120 feet', components: 'V, S',    duration: 'Instantaneous' },
-  { name: 'Guidance',            level: 'Cantrip', school: 'Divination',   time: 'Action',       range: 'Touch',    components: 'V, S',    duration: 'C, up to 1 minute', concentration: true },
-  { name: 'Light',               level: 'Cantrip', school: 'Evocation',    time: 'Action',       range: 'Touch',    components: 'V, M',    duration: '1 hour' },
-  { name: 'Mage Hand',           level: 'Cantrip', school: 'Conjuration',  time: 'Action',       range: '30 feet',  components: 'V, S',    duration: '1 minute' },
-  { name: 'Message',             level: 'Cantrip', school: 'Transmutation',time: 'Action',       range: '120 feet', components: 'S, M',    duration: '1 round' },
-  { name: 'Poison Spray',        level: 'Cantrip', school: 'Necromancy',   time: 'Action',       range: '30 feet',  components: 'V, S',    duration: 'Instantaneous' },
-  { name: 'Prestidigitation',    level: 'Cantrip', school: 'Transmutation',time: 'Action',       range: '10 feet',  components: 'V, S',    duration: 'Up to 1 hour' },
-  { name: 'Ray of Frost',        level: 'Cantrip', school: 'Evocation',    time: 'Action',       range: '60 feet',  components: 'V, S',    duration: 'Instantaneous' },
-  { name: 'Resistance',          level: 'Cantrip', school: 'Abjuration',   time: 'Action',       range: 'Touch',    components: 'V, S',    duration: 'C, up to 1 minute', concentration: true },
-  { name: 'Shocking Grasp',      level: 'Cantrip', school: 'Evocation',    time: 'Action',       range: 'Touch',    components: 'V, S',    duration: 'Instantaneous' },
-  { name: 'Spare the Dying',     level: 'Cantrip', school: 'Necromancy',   time: 'Action',       range: '15 feet',  components: 'V, S',    duration: 'Instantaneous' },
-  { name: 'Thorn Whip',          level: 'Cantrip', school: 'Transmutation',time: 'Action',       range: '30 feet',  components: 'V, S, M', duration: 'Instantaneous' },
-  { name: 'Thunderclap',         level: 'Cantrip', school: 'Evocation',    time: 'Action',       range: 'Self',     components: 'S',       duration: 'Instantaneous' },
-  { name: 'True Strike',         level: 'Cantrip', school: 'Divination',   time: 'Action',       range: 'Self',     components: 'S, M',    duration: 'Instantaneous' },
-
-  // ===== 1st LEVEL =====
-  { name: 'Alarm',                level: '1st', school: 'Abjuration',   time: '1 minute or R', range: '30 feet', components: 'V, S, M',     duration: '8 hours' },
-  { name: 'Cure Wounds',          level: '1st', school: 'Abjuration',   time: 'Action',        range: 'Touch',   components: 'V, S',        duration: 'Instantaneous' },
-  { name: 'Detect Magic',         level: '1st', school: 'Divination',   time: 'Action or R',   range: 'Self',    components: 'V, S',        duration: 'C, up to 10 minutes', concentration: true },
-  { name: 'Disguise Self',        level: '1st', school: 'Illusion',     time: 'Action',        range: 'Self',    components: 'V, S',        duration: '1 hour' },
-  { name: 'Expeditious Retreat',  level: '1st', school: 'Transmutation',time: 'Bonus Action',  range: 'Self',    components: 'V, S',        duration: 'C, up to 10 minutes', concentration: true },
-  { name: 'Faerie Fire',          level: '1st', school: 'Evocation',    time: 'Action',        range: '60 feet', components: 'V',           duration: 'C, up to 1 minute', concentration: true },
-  { name: 'False Life',           level: '1st', school: 'Necromancy',   time: 'Action',        range: 'Self',    components: 'V, S, M',     duration: 'Instantaneous' },
-  { name: 'Feather Fall',         level: '1st', school: 'Transmutation',time: 'Reaction',      range: '60 feet', components: 'V, M',        duration: '1 minute' },
-  { name: 'Grease',               level: '1st', school: 'Conjuration',  time: 'Action',        range: '60 feet', components: 'V, S, M',     duration: '1 minute' },
-  { name: 'Identify',             level: '1st', school: 'Divination',   time: '1 minute or R', range: 'Touch',   components: 'V, S, M(C)',  duration: 'Instantaneous' },
-  { name: 'Jump',                 level: '1st', school: 'Transmutation',time: 'Bonus Action',  range: 'Touch',   components: 'V, S, M',     duration: '1 minute' },
-  { name: 'Longstrider',          level: '1st', school: 'Transmutation',time: 'Action',        range: 'Touch',   components: 'V, S, M',     duration: '1 hour' },
-  { name: 'Purify Food and Drink',level: '1st', school: 'Transmutation',time: 'Action or R',   range: '10 feet', components: 'V, S',        duration: 'Instantaneous' },
-  { name: 'Sanctuary',            level: '1st', school: 'Abjuration',   time: 'Bonus Action',  range: '30 feet', components: 'V, S, M',     duration: '1 minute' },
-
-  // ===== 2nd LEVEL =====
-  { name: 'Aid',                level: '2nd', school: 'Abjuration',   time: 'Action',       range: '30 feet', components: 'V, S, M',    duration: '8 hours' },
-  { name: 'Alter Self',         level: '2nd', school: 'Transmutation',time: 'Action',       range: 'Self',    components: 'V, S',       duration: 'C, up to 1 hour', concentration: true },
-  { name: 'Arcane Lock',        level: '2nd', school: 'Abjuration',   time: 'Action',       range: 'Touch',   components: 'V, S, M(C*)',duration: 'Until dispelled' },
-  { name: 'Arcane Vigor',       level: '2nd', school: 'Abjuration',   time: 'Bonus Action', range: 'Self',    components: 'V, S',       duration: 'Instantaneous' },
-  { name: 'Blur',               level: '2nd', school: 'Illusion',     time: 'Action',       range: 'Self',    components: 'V',          duration: 'C, up to 1 minute', concentration: true },
-  { name: 'Continual Flame',    level: '2nd', school: 'Evocation',    time: 'Action',       range: 'Touch',   components: 'V, S, M(C*)',duration: 'Until dispelled' },
-  { name: 'Darkvision',         level: '2nd', school: 'Transmutation',time: 'Action',       range: 'Touch',   components: 'V, S, M',    duration: '8 hours' },
-  { name: 'Dragon\'s Breath',   level: '2nd', school: 'Transmutation',time: 'Bonus Action', range: 'Touch',   components: 'V, S, M',    duration: 'C, up to 1 minute', concentration: true },
-  { name: 'Enhance Ability',    level: '2nd', school: 'Transmutation',time: 'Action',       range: 'Touch',   components: 'V, S, M',    duration: 'C, up to 1 hour', concentration: true },
-  { name: 'Enlarge/Reduce',     level: '2nd', school: 'Transmutation',time: 'Action',       range: '30 feet', components: 'V, S, M',    duration: 'C, up to 1 minute', concentration: true },
-  { name: 'Heat Metal',         level: '2nd', school: 'Transmutation',time: 'Action',       range: '60 feet', components: 'V, S, M',    duration: 'C, up to 1 minute', concentration: true },
-  { name: 'Homunculus Servant', level: '2nd', school: 'Conjuration',  time: '1 hour or Ritual', range: '10 feet', components: 'V, S, M(C)', duration: 'Instantaneous' },
-  { name: 'Invisibility',       level: '2nd', school: 'Illusion',     time: 'Action',       range: 'Touch',   components: 'V, S, M',    duration: 'C, up to 1 hour', concentration: true },
-  { name: 'Lesser Restoration', level: '2nd', school: 'Abjuration',   time: 'Bonus Action', range: 'Touch',   components: 'V, S',       duration: 'Instantaneous' },
-  { name: 'Levitate',           level: '2nd', school: 'Transmutation',time: 'Action',       range: '60 feet', components: 'V, S, M',    duration: 'C, up to 10 minutes', concentration: true },
-  { name: 'Magic Mouth',        level: '2nd', school: 'Illusion',     time: '1 minute or R',range: '30 feet', components: 'V, S, M(C*)',duration: 'Until dispelled' },
-  { name: 'Magic Weapon',       level: '2nd', school: 'Transmutation',time: 'Bonus Action', range: 'Touch',   components: 'V, S',       duration: '1 hour' },
-  { name: 'Protection from Poison', level: '2nd', school: 'Abjuration', time: 'Action',     range: 'Touch',   components: 'V, S',       duration: '1 hour' },
-  { name: 'Rope Trick',         level: '2nd', school: 'Transmutation',time: 'Action',       range: 'Touch',   components: 'V, S, M',    duration: '1 hour' },
-  { name: 'See Invisibility',   level: '2nd', school: 'Divination',   time: 'Action',       range: 'Self',    components: 'V, S, M',    duration: '1 hour' },
-  { name: 'Spider Climb',       level: '2nd', school: 'Transmutation',time: 'Action',       range: 'Touch',   components: 'V, S, M',    duration: 'C, up to 1 hour', concentration: true },
-  { name: 'Web',                level: '2nd', school: 'Conjuration',  time: 'Action',       range: '60 feet', components: 'V, S, M',    duration: 'C, up to 1 hour', concentration: true },
-
-  // ===== 3rd LEVEL =====
-  { name: 'Blink',                level: '3rd', school: 'Transmutation',time: 'Action',     range: 'Self',    components: 'V, S',      duration: '1 minute' },
-  { name: 'Create Food and Water',level: '3rd', school: 'Conjuration',  time: 'Action',     range: '30 feet', components: 'V, S',      duration: 'Instantaneous' },
-  { name: 'Dispel Magic',         level: '3rd', school: 'Abjuration',   time: 'Action',     range: '120 feet',components: 'V, S',      duration: 'Instantaneous' },
-  { name: 'Elemental Weapon',     level: '3rd', school: 'Transmutation',time: 'Action',     range: 'Touch',   components: 'V, S',      duration: 'C, up to 1 hour', concentration: true },
-  { name: 'Fly',                  level: '3rd', school: 'Transmutation',time: 'Action',     range: 'Touch',   components: 'V, S, M',   duration: 'C, up to 10 minutes', concentration: true },
-  { name: 'Glyph of Warding',     level: '3rd', school: 'Abjuration',   time: '1 hour',     range: 'Touch',   components: 'V, S, M(C*)',duration: 'Until dispelled or triggered' },
-  { name: 'Haste',                level: '3rd', school: 'Transmutation',time: 'Action',     range: '30 feet', components: 'V, S, M',   duration: 'C, up to 1 minute', concentration: true },
-  { name: 'Protection from Energy',level: '3rd', school: 'Abjuration', time: 'Action',     range: 'Touch',   components: 'V, S',      duration: 'C, up to 1 hour', concentration: true },
-  { name: 'Revivify',             level: '3rd', school: 'Necromancy',  time: 'Action',     range: 'Touch',   components: 'V, S, M(C*)',duration: 'Instantaneous' },
-  { name: 'Water Breathing',      level: '3rd', school: 'Transmutation',time: 'Action or R',range: '30 feet', components: 'V, S, M',   duration: '24 hours' },
-  { name: 'Water Walk',           level: '3rd', school: 'Transmutation',time: 'Action or R',range: '30 feet', components: 'V, S, M',   duration: '1 hour' },
-
-  // ===== 4th LEVEL =====
-  { name: 'Arcane Eye',                       level: '4th', school: 'Divination',   time: 'Action',     range: '30 feet', components: 'V, S, M',     duration: 'C, up to 1 hour', concentration: true },
-  { name: 'Fabricate',                        level: '4th', school: 'Transmutation',time: '10 minutes', range: '120 feet',components: 'V, S',        duration: 'Instantaneous' },
-  { name: 'Freedom of Movement',              level: '4th', school: 'Abjuration',   time: 'Action',     range: 'Touch',   components: 'V, S, M',     duration: '1 hour' },
-  { name: 'Leomund\'s Secret Chest',          level: '4th', school: 'Conjuration',  time: 'Action',     range: 'Touch',   components: 'V, S, M(C)',  duration: 'Until dispelled' },
-  { name: 'Mordenkainen\'s Private Sanctum',  level: '4th', school: 'Abjuration',   time: '10 minutes', range: '120 feet',components: 'V, S, M',     duration: '24 hours' },
-  { name: 'Otiluke\'s Resilient Sphere',      level: '4th', school: 'Abjuration',   time: 'Action',     range: '30 feet', components: 'V, S, M',     duration: 'C, up to 1 minute', concentration: true },
-  { name: 'Stone Shape',                      level: '4th', school: 'Transmutation',time: 'Action',     range: 'Touch',   components: 'V, S, M',     duration: 'Instantaneous' },
-  { name: 'Stoneskin',                        level: '4th', school: 'Transmutation',time: 'Action',     range: 'Touch',   components: 'V, S, M(C*)', duration: 'C, up to 1 hour', concentration: true },
-  { name: 'Summon Construct',                 level: '4th', school: 'Conjuration',  time: 'Action',     range: '90 feet', components: 'V, S, M(C)',  duration: 'C, up to 1 hour', concentration: true },
-
-  // ===== 5th LEVEL =====
-  { name: 'Animate Objects',     level: '5th', school: 'Transmutation', time: 'Action',   range: '120 feet', components: 'V, S',       duration: 'C, up to 1 minute', concentration: true },
-  { name: 'Bigby\'s Hand',       level: '5th', school: 'Evocation',     time: 'Action',   range: '120 feet', components: 'V, S, M',    duration: 'C, up to 1 minute', concentration: true },
-  { name: 'Circle of Power',     level: '5th', school: 'Abjuration',    time: 'Action',   range: 'Self',     components: 'V',          duration: 'C, up to 10 minutes', concentration: true },
-  { name: 'Creation',            level: '5th', school: 'Illusion',      time: '1 minute', range: '30 feet',  components: 'V, S, M',    duration: 'Special' },
-  { name: 'Greater Restoration', level: '5th', school: 'Abjuration',    time: 'Action',   range: 'Touch',    components: 'V, S, M(C*)',duration: 'Instantaneous' },
-  { name: 'Wall of Stone',       level: '5th', school: 'Evocation',     time: 'Action',   range: '120 feet', components: 'V, S, M',    duration: 'C, up to 10 minutes', concentration: true },
-
-  // ===== SUBCLASS-ONLY SPELLS =====
-  // Always-prepared via Armorer; not on the base Artificer prepared list, so
-  // they shouldn't appear in the prepared-spell picker.
-  { name: 'Magic Missile',     level: '1st', school: 'Evocation',    time: 'Action',     range: '120 feet',          components: 'V, S',    duration: 'Instantaneous',                          subclassOnly: true },
-  { name: 'Thunderwave',       level: '1st', school: 'Evocation',    time: 'Action',     range: 'Self (15-ft cube)', components: 'V, S',    duration: 'Instantaneous',                          subclassOnly: true },
-  { name: 'Mirror Image',      level: '2nd', school: 'Illusion',     time: 'Action',     range: 'Self',              components: 'V, S',    duration: '1 minute',                                subclassOnly: true },
-  { name: 'Shatter',           level: '2nd', school: 'Evocation',    time: 'Action',     range: '60 feet',           components: 'V, S, M', duration: 'Instantaneous',                          subclassOnly: true },
-  { name: 'Hypnotic Pattern',  level: '3rd', school: 'Illusion',     time: 'Action',     range: '120 feet',          components: 'S, M',    duration: 'C, up to 1 minute', concentration: true, subclassOnly: true },
-  { name: 'Lightning Bolt',    level: '3rd', school: 'Evocation',    time: 'Action',     range: 'Self (100-ft line)',components: 'V, S, M', duration: 'Instantaneous',                          subclassOnly: true },
-  { name: 'Fire Shield',       level: '4th', school: 'Evocation',    time: 'Action',     range: 'Self',              components: 'V, S, M', duration: '10 minutes',                              subclassOnly: true },
-  { name: 'Passwall',          level: '5th', school: 'Transmutation',time: 'Action',     range: '30 feet',           components: 'V, S, M', duration: '1 hour',                                  subclassOnly: true }
-];
-const _SPELLS_PLACEHOLDER_HEAD = [
-  // Cantrips
-  { name: 'Eldritch Blast', level: 'Cantrip', class: 'Warlock', gained: 1, notes: 'The Engine. Force damage, 120 ft, ranged spell attack.' },
-  { name: 'Light', level: 'Cantrip', class: 'Aasimar', gained: 1, notes: 'Touch object, sheds bright light 20 ft.' },
-  { name: 'Prestidigitation', level: 'Cantrip', class: 'Warlock', gained: 1, notes: 'Minor magical effects. Tuning strings, lighting candles.' },
-  { name: 'Mind Sliver', level: 'Cantrip', class: 'Warlock', gained: 4, notes: '1d6 psychic; target has −1d4 on its next save before end of your next turn.' },
-  { name: 'Mage Hand', level: 'Cantrip', class: 'Sorcerer', gained: 5, notes: 'Spectral floating hand. 30 ft range.' },
-  { name: 'Minor Illusion', level: 'Cantrip', class: 'Sorcerer', gained: 5, notes: 'Sound or image, 1 minute.' },
-  { name: 'Mold Earth', level: 'Cantrip', class: 'Sorcerer', gained: 5, notes: 'Excavate or shape stone/earth in a 5-ft cube.' },
-  { name: 'Shape Water', level: 'Cantrip', class: 'Sorcerer', gained: 5, notes: 'Manipulate up to 5 ft cube of water.' },
-  { name: 'Sorcerous Burst', level: 'Cantrip', class: 'Sorcerer', gained: 8, notes: '1d8 force; chains an additional d8 on each max roll.' },
-  { name: 'Message', level: 'Cantrip', class: 'Sorcerer', gained: 14, notes: 'Whispered telepathic message + reply, 120 ft.' },
-  // 1st level
-  { name: 'Hex', level: '1st', class: 'Warlock', gained: 1, concentration: true, notes: 'Bonus action. 1d6 necrotic on hits. Moves to new target when current drops.' },
-  { name: 'Hideous Laughter', level: '1st', class: 'Warlock', gained: 1, concentration: true, notes: 'WIS save, target prone and incapacitated on fail.' },
-  { name: 'Find Familiar', level: '1st', class: 'Pact of the Chain', gained: 3, notes: 'Summons Vex, an imp.' },
-  { name: 'Shield', level: '1st', class: 'Hexblade', gained: 1, notes: '+5 AC reaction, no damage from Magic Missile.' },
-  { name: 'Magic Missile', level: '1st', class: 'Sorcerer', gained: 5, notes: 'Three force darts, auto-hit, 1d4+1 each.' },
-  { name: 'Silvery Barbs', level: '1st', class: 'Sorcerer', gained: 5, notes: 'Reaction: force reroll of successful attack/save/check, give ally advantage.' },
-  { name: 'Absorb Elements', level: '1st', class: 'Sorcerer', gained: 5, notes: 'Reaction: resistance to triggering element until next turn.' },
-  // 2nd level
-  { name: 'Mirror Image', level: '2nd', class: 'Warlock', gained: 5, notes: 'Three duplicates, attackers may hit a duplicate instead.' },
-  { name: 'Misty Step', level: '2nd', class: 'Sorcerer', gained: 7, notes: 'Bonus action teleport 30 ft.' },
-  { name: 'Suggestion', level: '2nd', class: 'Warlock', gained: 3, concentration: true, notes: 'WIS save, target follows reasonable command for up to 8 hours.' },
-  // 3rd level
-  { name: 'Counterspell', level: '3rd', class: 'Sorcerer', gained: 9, notes: 'Reaction: shut down enemy spell up to 3rd level automatically.' },
-  { name: 'Fireball', level: '3rd', class: 'Sorcerer', gained: 9, notes: '8d6 fire, 20 ft radius, DEX save half.' },
-  { name: 'Hypnotic Pattern', level: '3rd', class: 'Sorcerer', gained: 9, concentration: true, notes: 'WIS save, charm + incapacitate in 30 ft cube.' },
-  { name: 'Fly', level: '3rd', class: 'Sorcerer', gained: 9, concentration: true, notes: '60 ft fly speed, concentration, 10 min.' },
-  // 4th
-  { name: 'Greater Invisibility', level: '4th', class: 'Sorcerer', gained: 11, concentration: true, notes: 'Invisible while concentrating. Advantage on attacks.' },
-  { name: 'Polymorph', level: '4th', class: 'Sorcerer', gained: 11, concentration: true, notes: 'Transform creature into a beast. 1 hour.' },
-  // 5th
-  { name: 'Wall of Force', level: '5th', class: 'Sorcerer', gained: 13, concentration: true, notes: 'Invisible wall, blocks everything for 10 min.' },
-  { name: 'Synaptic Static', level: '5th', class: 'Sorcerer', gained: 13, notes: '8d6 psychic in 20 ft radius, INT save half + −1d6 to attacks/checks.' },
-  // 6th
-  { name: 'Disintegrate', level: '6th', class: 'Sorcerer', gained: 15, notes: '10d6+40 force damage, target turned to dust if killed.' },
-  { name: 'Chain Lightning', level: '6th', class: 'Sorcerer', gained: 15, notes: '10d8 lightning, primary + 3 secondary targets.' },
-  // 7th
-  { name: 'Forcecage', level: '7th', class: 'Sorcerer', gained: 17, notes: 'Inescapable box of force, 1 hour.' },
-  { name: 'Plane Shift', level: '7th', class: 'Sorcerer', gained: 17, notes: 'Travel to another plane or banish creature.' },
-  // 8th
-  { name: 'Sunburst', level: '8th', class: 'Sorcerer', gained: 18, notes: '12d6 radiant in 60 ft radius, blinds on fail.' },
-  // 9th
-  { name: 'Mind Blank', level: '8th', class: 'Sorcerer', gained: 20, notes: 'Target is immune to charm, fear, possession, divination, and psychic damage for 8 hours.' }
+  { name: 'Blade Ward', level: 'Cantrip', school: 'Abjuration', time: 'Action', range: 'Self', components: 'V, S', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Chill Touch', level: 'Cantrip', school: 'Necromancy', time: 'Action', range: 'Touch', components: 'V, S', duration: 'Instantaneous' },
+  { name: 'Eldritch Blast', level: 'Cantrip', school: 'Evocation', time: 'Action', range: '120 feet', components: 'V, S', duration: 'Instantaneous' },
+  { name: 'Friends', level: 'Cantrip', school: 'Enchantment', time: 'Action', range: '10 feet', components: 'S, M', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Mage Hand', level: 'Cantrip', school: 'Conjuration', time: 'Action', range: '30 feet', components: 'V, S', duration: '1 minute' },
+  { name: 'Mind Sliver', level: 'Cantrip', school: 'Enchantment', time: 'Action', range: '60 feet', components: 'V', duration: '1 round' },
+  { name: 'Minor Illusion', level: 'Cantrip', school: 'Illusion', time: 'Action', range: '30 feet', components: 'S, M', duration: '1 minute' },
+  { name: 'Poison Spray', level: 'Cantrip', school: 'Necromancy', time: 'Action', range: '30 feet', components: 'V, S', duration: 'Instantaneous' },
+  { name: 'Prestidigitation', level: 'Cantrip', school: 'Transmutation', time: 'Action', range: '10 feet', components: 'V, S', duration: 'Up to 1 hour' },
+  { name: 'Thunderclap', level: 'Cantrip', school: 'Evocation', time: 'Action', range: 'Self', components: 'S', duration: 'Instantaneous' },
+  { name: 'Toll the Dead', level: 'Cantrip', school: 'Necromancy', time: 'Action', range: '60 feet', components: 'V, S', duration: 'Instantaneous' },
+  { name: 'True Strike', level: 'Cantrip', school: 'Divination', time: 'Action', range: 'Self', components: 'S, M', duration: 'Instantaneous' },
+  // ===== 1ST LEVEL =====
+  { name: 'Armor of Agathys', level: '1st', school: 'Abjuration', time: 'Bonus Action', range: 'Self', components: 'V, S, M', duration: '1 hour' },
+  { name: 'Arms of Hadar', level: '1st', school: 'Conjuration', time: 'Action', range: 'Self', components: 'V, S', duration: 'Instantaneous' },
+  { name: 'Bane', level: '1st', school: 'Enchantment', time: 'Action', range: '30 feet', components: 'V, S, M', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Charm Person', level: '1st', school: 'Enchantment', time: 'Action', range: '30 feet', components: 'V, S', duration: '1 hour' },
+  { name: 'Comprehend Languages', level: '1st', school: 'Divination', time: 'Action or R', range: 'Self', components: 'V, S, M', duration: '1 hour' },
+  { name: 'Detect Magic', level: '1st', school: 'Divination', time: 'Action or R', range: 'Self', components: 'V, S', duration: 'C, up to 10 minutes', concentration: true },
+  { name: 'Expeditious Retreat', level: '1st', school: 'Transmutation', time: 'Bonus Action', range: 'Self', components: 'V, S', duration: 'C up to 10 minutes', concentration: true },
+  { name: 'Hellish Rebuke', level: '1st', school: 'Evocation', time: 'Reaction(*)', range: '60 feet', components: 'V, S', duration: 'Instantaneous' },
+  { name: 'Hex', level: '1st', school: 'Enchantment', time: 'Bonus Action', range: '90 feet', components: 'V, S, M', duration: 'C, up to 1 hour', concentration: true },
+  { name: 'Illusory Script', level: '1st', school: 'Illusion', time: '1 minute or R', range: 'Touch', components: 'S, M(C*)', duration: '10 days' },
+  { name: 'Protection from Evil and Good', level: '1st', school: 'Abjuration', time: 'Action', range: 'Touch', components: 'V, S, M(C*)', duration: 'C, up to 10 minutes', concentration: true },
+  { name: 'Speak with Animals', level: '1st', school: 'Divination', time: 'Action or R', range: 'Self', components: 'V, S', duration: '10 minutes' },
+  { name: 'Tasha\'s Hideous Laughter', level: '1st', school: 'Enchantment', time: 'Action', range: '30 feet', components: 'V, S, M', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Unseen Servant', level: '1st', school: 'Conjuration', time: 'Action or R', range: '60 feet', components: 'V, S, M', duration: '1 hour' },
+  { name: 'Witch Bolt', level: '1st', school: 'Evocation', time: 'Action', range: '60 feet', components: 'V, S, M', duration: 'C, up to 1 minute', concentration: true },
+  // ===== 2ND LEVEL =====
+  { name: 'Cloud Of Daggers', level: '2nd', school: 'Conjuration', time: 'Action', range: '60 feet', components: 'V, S, M', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Crown Of Madness', level: '2nd', school: 'Enchantment', time: 'Action', range: '120 feet', components: 'V, S', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Darkness', level: '2nd', school: 'Evocation', time: 'Action', range: '60 feet', components: 'V, M', duration: 'C, up to 10 minutes', concentration: true },
+  { name: 'Enthrall', level: '2nd', school: 'Enchantment', time: 'Action', range: '60 feet', components: 'V, S', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Hold Person', level: '2nd', school: 'Enchantment', time: 'Action', range: '60 feet', components: 'V, S, M', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Invisibility', level: '2nd', school: 'Illusion', time: 'Action', range: 'Touch', components: 'V, S, M', duration: 'C, up to 1 hour', concentration: true },
+  { name: 'Mind Spike', level: '2nd', school: 'Divination', time: 'Action', range: '120 feet', components: 'S', duration: 'C, up to 1 hour', concentration: true },
+  { name: 'Mirror Image', level: '2nd', school: 'Illusion', time: 'Action', range: 'Self', components: 'V, S', duration: '1 minute' },
+  { name: 'Misty Step', level: '2nd', school: 'Conjuration', time: 'Bonus Action', range: 'Self', components: 'V', duration: 'Instantaneous' },
+  { name: 'Ray of Enfeeblement', level: '2nd', school: 'Necromancy', time: 'Action', range: '60 feet', components: 'V, S', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Spider Climb', level: '2nd', school: 'Transmutation', time: 'Action', range: 'Touch', components: 'V, S, M', duration: 'C, up to 1 hour', concentration: true },
+  { name: 'Suggestion', level: '2nd', school: 'Enchantment', time: 'Action', range: '30 feet', components: 'V, M', duration: 'C, up to 8 hours', concentration: true },
+  // ===== 3RD LEVEL =====
+  { name: 'Counterspell', level: '3rd', school: 'Abjuration', time: 'Reaction', range: '60 feet', components: 'S', duration: 'Instantaneous' },
+  { name: 'Dispel Magic', level: '3rd', school: 'Abjuration', time: 'Action', range: '120 feet', components: 'V, S', duration: 'Instantaneous' },
+  { name: 'Fear', level: '3rd', school: 'Illusion', time: 'Action', range: 'Self', components: 'V, S, M', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Fly', level: '3rd', school: 'Transmutation', time: 'Action', range: 'Touch', components: 'V, S, M', duration: 'C, up to 10 minutes', concentration: true },
+  { name: 'Gaseous Form', level: '3rd', school: 'Transmutation', time: 'Action', range: 'Touch', components: 'V, S, M', duration: 'C, up to 1 hour', concentration: true },
+  { name: 'Hunger of Hadar', level: '3rd', school: 'Conjuration', time: 'Action', range: '150 feet', components: 'V, S, M', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Hypnotic Pattern', level: '3rd', school: 'Illusion', time: 'Action', range: '120 feet', components: 'S, M', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Magic Circle', level: '3rd', school: 'Abjuration', time: '1 minute', range: '10 feet', components: 'V, S, M(C*)', duration: '1 hour' },
+  { name: 'Major Image', level: '3rd', school: 'Illusion', time: 'Action', range: '120 feet', components: 'V, S, M', duration: 'C, up to 10 minutes', concentration: true },
+  { name: 'Remove Curse', level: '3rd', school: 'Abjuration', time: 'Action', range: 'Touch', components: 'V, S', duration: 'Instantaneous' },
+  { name: 'Summon Fey', level: '3rd', school: 'Conjuration', time: 'Action', range: '90 feet', components: 'V, S, M(C)', duration: 'C, up to 1 hour', concentration: true },
+  { name: 'Summon Undead', level: '3rd', school: 'Necromancy', time: 'Action', range: '90 feet', components: 'V, S, M(C)', duration: 'C, up to 1 hour', concentration: true },
+  { name: 'Tongues', level: '3rd', school: 'Divination', time: 'Action', range: 'Touch', components: 'V, M', duration: '1 hour' },
+  { name: 'Vampiric Touch', level: '3rd', school: 'Necromancy', time: 'Action', range: 'Self', components: 'V, S', duration: 'C, up to 1 minute', concentration: true },
+  // ===== 4TH LEVEL =====
+  { name: 'Backlash', level: '4th', school: 'Abjuration', time: 'Reaction', range: '60 feet', components: 'V', duration: 'Instantaneous' },
+  { name: 'Banishment', level: '4th', school: 'Abjuration', time: 'Action', range: '30 feet', components: 'V, S, M', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Blight', level: '4th', school: 'Necromancy', time: 'Action', range: '30 feet', components: 'V, S', duration: 'Instantaneous' },
+  { name: 'Charm Monster', level: '4th', school: 'Enchantment', time: 'Action', range: '30 feet', components: 'V, S', duration: '1 hour' },
+  { name: 'Dimension Door', level: '4th', school: 'Conjuration', time: 'Action', range: '500 feet', components: 'V', duration: 'Instantaneous' },
+  { name: 'Doomtide', level: '4th', school: 'Conjuration', time: 'Action', range: '120 feet', components: 'V, S, M', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Hallucinatory Terrain', level: '4th', school: 'Illusion', time: '10 minutes', range: '300 feet', components: 'V, S, M', duration: '24 hours' },
+  { name: 'Summon Aberration', level: '4th', school: 'Conjuration', time: 'Action', range: '90 feet', components: 'V, S, M(C)', duration: 'C, up to 1 hour', concentration: true },
+  // ===== 5TH LEVEL =====
+  { name: 'Contact Other Plane', level: '5th', school: 'Divination', time: '1 minute or R', range: 'Self', components: 'V', duration: '1 minute' },
+  { name: 'Dream', level: '5th', school: 'Illusion', time: '1 minute', range: 'Special', components: 'V, S, M', duration: '8 hours' },
+  { name: 'Hold Monster', level: '5th', school: 'Enchantment', time: 'Action', range: '90 feet', components: 'V, S, M', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Jallarzi\'s Storm of Radiance', level: '5th', school: 'Evocation', time: 'Action', range: '120 feet', components: 'V, S, M', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Mislead', level: '5th', school: 'Illusion', time: 'Action', range: 'Self', components: 'S', duration: 'C, up to 1 hour', concentration: true },
+  { name: 'Planar Binding', level: '5th', school: 'Abjuration', time: '1 hour', range: '60 feet', components: 'V, S, M(C*)', duration: '24 hours' },
+  { name: 'Scrying', level: '5th', school: 'Divination', time: '10 minutes', range: 'Self', components: 'V, S, M', duration: 'C, up to 10 minutes', concentration: true },
+  { name: 'Synaptic Static', level: '5th', school: 'Enchantment', time: 'Action', range: '120 feet', components: 'V, S', duration: 'Instantaneous' },
+  { name: 'Teleportation Circle', level: '5th', school: 'Conjuration', time: '1 minute', range: '10 feet', components: 'V, M (C*)', duration: '1 round' },
+  // ===== 6TH LEVEL =====
+  { name: 'Arcane Gate', level: '6th', school: 'Conjuration', time: 'Action', range: '500 feet', components: 'V, S', duration: 'C, up to 10 minutes', concentration: true },
+  { name: 'Circle Of Death', level: '6th', school: 'Necromancy', time: 'Action', range: '150 feet', components: 'V, S, M(C)', duration: 'Instantaneous' },
+  { name: 'Create Undead', level: '6th', school: 'Necromancy', time: '1 minute', range: '10 feet', components: 'V, S, M(C)', duration: 'Instantaneous' },
+  { name: 'Eyebite', level: '6th', school: 'Necromancy', time: 'Action', range: 'Self', components: 'V, S', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Summon Fiend', level: '6th', school: 'Conjuration', time: 'Action', range: '90 feet', components: 'V, S, M(C)', duration: 'C, up to 1 hour', concentration: true },
+  { name: 'Tasha\'s Bubbling Cauldron', level: '6th', school: 'Conjuration', time: 'Action', range: '5 feet', components: 'V, S, M', duration: '10 minutes' },
+  { name: 'True Seeing', level: '6th', school: 'Divination', time: 'Action', range: 'Touch', components: 'V, S, M(C*)', duration: '1 hour' },
+  // ===== 7TH LEVEL =====
+  { name: 'Etherealness', level: '7th', school: 'Conjuration', time: 'Action', range: 'Self', components: 'V, S', duration: 'Up to 8 hours' },
+  { name: 'Finger of Death', level: '7th', school: 'Necromancy', time: 'Action', range: '60 feet', components: 'V, S', duration: 'Instantaneous' },
+  { name: 'Forcecage', level: '7th', school: 'Evocation', time: 'Action', range: '100 feet', components: 'V, S, M(C*)', duration: 'C, up to 1 hour', concentration: true },
+  { name: 'Plane Shift', level: '7th', school: 'Conjuration', time: 'Action', range: 'Touch', components: 'V, S, M(C)', duration: 'Instantaneous' },
+  // ===== 8TH LEVEL =====
+  { name: 'Befuddlement', level: '8th', school: 'Enchantment', time: 'Action', range: '150 feet', components: 'V, S, M', duration: 'Instantanous' },
+  { name: 'Demiplane', level: '8th', school: 'Conjuration', time: 'Action', range: '60 feet', components: 'S', duration: '1 hour' },
+  { name: 'Dominate Monster', level: '8th', school: 'Enchantment', time: 'Action', range: '60 feet', components: 'V, S', duration: 'C, up to 1 hour', concentration: true },
+  { name: 'Glibness', level: '8th', school: 'Enchantment', time: 'Action', range: 'Self', components: 'V', duration: '1 hour' },
+  { name: 'Power Word Stun', level: '8th', school: 'Enchantment', time: 'Action', range: '60 feet', components: 'V', duration: 'Instantaneous' },
+  // ===== 9TH LEVEL =====
+  { name: 'Astral Projection', level: '9th', school: 'Necromancy', time: '1 hour', range: '10 feet', components: 'V, S, M (C*)', duration: 'Until dispelled' },
+  { name: 'Blade Of Disaster', level: '9th', school: 'Conjuration', time: 'Bonus Action', range: '60 feet', components: 'V, S', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Foresight', level: '9th', school: 'Divination', time: '1 minute', range: 'Touch', components: 'V, S, M', duration: '8 hours' },
+  { name: 'Gate', level: '9th', school: 'Conjuration', time: 'Action', range: '60 feet', components: 'V, S, M(C)', duration: 'C, up to 1 minute', concentration: true },
+  { name: 'Imprisonment', level: '9th', school: 'Abjuration', time: '1 minute', range: '30 feet', components: 'V, S, M(C)', duration: 'Until dispelled' },
+  { name: 'Power Word Kill', level: '9th', school: 'Enchantment', time: 'Action', range: '60 feet', components: 'V', duration: 'Instantaneous' },
+  { name: 'True Polymorph', level: '9th', school: 'Transmutation', time: 'Action', range: '30 feet', components: 'V, S, M', duration: 'C, up to 1 hour', concentration: true },
+  { name: 'Weird', level: '9th', school: 'Illusion', time: 'Action', range: '120 feet', components: 'V, S', duration: 'C, up to 1 minute', concentration: true },
 ];
 
 // 2024 PHB feats catalog. Each feat has:
@@ -4034,6 +3990,75 @@ const CUNNING_STRIKE_EFFECTS = [
     desc: 'On a fail, the target has the Blinded condition until the end of your next turn.' },
   { name: 'Knock Out', cost: 6, source: 'Devious Strikes', minRogue: 13, save: 'CON',
     desc: 'On a fail, the target has the Unconscious condition for 1 minute (saves at end of each of its turns). Stops if it takes damage. The save DC is your Cunning Strike DC even at distance.' }
+];
+
+// 2024 PHB Eldritch Invocations (28). Filtered by minLevel (Warlock level), prereqs
+// (other invocations or cantrip-type requirements), and Pact Boon variants. The
+// picker enforces these gates at level-up time.
+//
+// Field reference:
+//   minLevel       - minimum Warlock level required
+//   prereqs        - array of strings (invocation names or cantrip-type requirements)
+//                    Anything ending in "Invocation" is checked against state.warlockInvocations.
+//   repeatable     - if true, can pick the invocation more than once (each time on a different
+//                    eligible cantrip / Origin feat)
+const INVOCATIONS = [
+  { name: 'Agonizing Blast',               minLevel: 2, prereqs: ['a Warlock Cantrip That Deals Damage'], repeatable: true,
+    desc: 'Choose one of your known Warlock cantrips that deals damage. You can add your Charisma modifier to that spell\'s damage rolls. Repeatable — each time, choose a different eligible cantrip.' },
+  { name: 'Armor of Shadows',              minLevel: 1, prereqs: [],
+    desc: 'You can cast Mage Armor on yourself without expending a spell slot.' },
+  { name: 'Ascendant Step',                minLevel: 5, prereqs: [],
+    desc: 'You can cast Levitate on yourself without expending a spell slot.' },
+  { name: 'Devil\'s Sight',                minLevel: 2, prereqs: [],
+    desc: 'You can see normally in Dim Light and Darkness — both magical and nonmagical — within 120 feet of yourself.' },
+  { name: 'Devouring Blade',               minLevel: 12, prereqs: ['Thirsting Blade Invocation'],
+    desc: 'The Extra Attack of your Thirsting Blade invocation confers two extra attacks rather than one.' },
+  { name: 'Eldritch Mind',                 minLevel: 1, prereqs: [],
+    desc: 'You have Advantage on Constitution saving throws that you make to maintain Concentration.' },
+  { name: 'Eldritch Smite',                minLevel: 5, prereqs: ['Pact of the Blade Invocation'],
+    desc: 'Once per turn when you hit a creature with your pact weapon, you can expend a Pact Magic spell slot to deal an extra 1d8 Force damage to the target, plus another 1d8 per level of the spell slot, and you can give the target the Prone condition if it is Huge or smaller.' },
+  { name: 'Eldritch Spear',                minLevel: 2, prereqs: ['a Warlock Cantrip That Deals Damage'], repeatable: true,
+    desc: 'Choose one of your known Warlock cantrips that deals damage and has a range of 10+ feet. When you cast it, its range increases by 30 ft × your Warlock level. Repeatable — each time, choose a different eligible cantrip.' },
+  { name: 'Fiendish Vigor',                minLevel: 2, prereqs: [],
+    desc: 'You can cast False Life on yourself without expending a spell slot. When cast this way, the Temporary HP die rolls the maximum value automatically (no roll).' },
+  { name: 'Gaze of Two Minds',             minLevel: 5, prereqs: [],
+    desc: 'Bonus Action: touch a willing creature and perceive through its senses until the end of your next turn. Same plane required. Each subsequent turn, spend a Bonus Action to extend the connection. You benefit from any special senses the creature has; you can cast spells as if you were in your space OR the other creature\'s space if you\'re within 60 ft of each other.' },
+  { name: 'Gift of the Depths',            minLevel: 5, prereqs: [],
+    desc: 'You can breathe underwater and gain a Swim Speed equal to your Speed. You can cast Water Breathing once without expending a spell slot, recovering on a Long Rest.' },
+  { name: 'Gift of the Protectors',        minLevel: 9, prereqs: ['Pact of the Tome Invocation'],
+    desc: 'A new page appears in your Book of Shadows when you conjure it. With your permission, a creature can take an action to write its name on that page (max names = your CHA mod, minimum 1). When any creature whose name is on the page is reduced to 0 HP but not killed outright, that creature magically drops to 1 HP instead. Once triggered, no creature can benefit from this magic again until you finish a Long Rest. Magic action to erase a name by touching it.' },
+  { name: 'Investment of the Chain Master',minLevel: 5, prereqs: ['Pact of the Chain Invocation'],
+    desc: 'When you cast Find Familiar, your familiar gains: a Fly OR Swim Speed of 40 ft (your choice); a Bonus Action you can use to command it to take the Attack action; the option to deal Necrotic or Radiant damage instead of B/P/S; uses your spell save DC for its effects; you can use a Reaction to grant it Resistance to incoming damage.' },
+  { name: 'Lessons of the First Ones',     minLevel: 2, prereqs: [], repeatable: true,
+    desc: 'You receive knowledge from an elder entity, gaining one Origin feat of your choice. Repeatable — each time, choose a different Origin feat.' },
+  { name: 'Lifedrinker',                   minLevel: 9, prereqs: ['Pact of the Blade Invocation'],
+    desc: 'Once per turn when you hit with your pact weapon, deal +1d6 Necrotic, Psychic, or Radiant damage (your choice). You can also expend one Hit Die to roll it and regain HP equal to the roll + your CON modifier (minimum 1 HP).' },
+  { name: 'Mask of Many Faces',            minLevel: 2, prereqs: [],
+    desc: 'You can cast Disguise Self without expending a spell slot.' },
+  { name: 'Master of Myriad Forms',        minLevel: 5, prereqs: [],
+    desc: 'You can cast Alter Self without expending a spell slot.' },
+  { name: 'Misty Visions',                 minLevel: 2, prereqs: [],
+    desc: 'You can cast Silent Image without expending a spell slot.' },
+  { name: 'One with Shadows',              minLevel: 5, prereqs: [],
+    desc: 'While in an area of Dim Light or Darkness, you can cast Invisibility on yourself without expending a spell slot.' },
+  { name: 'Otherworldly Leap',             minLevel: 2, prereqs: [],
+    desc: 'You can cast Jump on yourself without expending a spell slot.' },
+  { name: 'Pact of the Blade',             minLevel: 1, prereqs: [],
+    desc: 'Bonus Action: conjure a pact weapon in your hand (any Simple or Martial Melee weapon of your choice with which you bond), or create a bond with a magic weapon you touch (cannot bond if attuned to another, or already bonded by another Warlock). Until the bond ends: you have proficiency with the weapon, and can use it as a Spellcasting Focus. Attacks with the bonded weapon may use your Charisma modifier instead of STR or DEX, and may deal Necrotic, Psychic, or Radiant damage instead of its normal type. The bond ends if you use this Bonus Action again, if the weapon is 5+ ft away from you for 1 minute or more, or if you die. Conjured weapons disappear when the bond ends.' },
+  { name: 'Pact of the Chain',             minLevel: 1, prereqs: [],
+    desc: 'You learn Find Familiar and can cast it as a Magic action without expending a spell slot. Special forms available: Imp, Pseudodragon, Quasit, Skeleton, Slaad Tadpole, Sphinx of Wonder, Sprite, or Venomous Snake. When you take the Attack action, you can forgo one of your own attacks to let your familiar make one attack of its own with its Reaction.' },
+  { name: 'Pact of the Tome',              minLevel: 1, prereqs: [],
+    desc: 'At the end of a Short or Long Rest, you conjure a Book of Shadows in your hand. Choose 3 cantrips and 2 level-1 spells with the Ritual tag (any class\'s spell list; must be spells you don\'t already have prepared). While the book is on your person, those spells are prepared and function as Warlock spells. The book also serves as a Spellcasting Focus. The book disappears if you conjure another one or if you die.' },
+  { name: 'Repelling Blast',               minLevel: 2, prereqs: ['a Warlock Cantrip That Deals Damage via an Attack Roll'], repeatable: true,
+    desc: 'Choose one of your known Warlock cantrips that requires an attack roll. When you hit a Large or smaller creature with that cantrip, you can push the creature up to 10 ft straight away from you. Repeatable — each time, choose a different eligible cantrip.' },
+  { name: 'Thirsting Blade',               minLevel: 5, prereqs: ['Pact of the Blade Invocation'],
+    desc: 'You gain the Extra Attack feature for your pact weapon only. With that feature, you can attack twice with the bonded weapon instead of once when you take the Attack action.' },
+  { name: 'Visions of Distant Realms',     minLevel: 9, prereqs: [],
+    desc: 'You can cast Arcane Eye without expending a spell slot.' },
+  { name: 'Whispers of the Grave',         minLevel: 7, prereqs: [],
+    desc: 'You can cast Speak with Dead without expending a spell slot.' },
+  { name: 'Witch Sight',                   minLevel: 15, prereqs: [],
+    desc: 'You have Truesight with a range of 30 feet.' }
 ];
 
 // 2024 PHB weapons with their Mastery property. Used by the Rogue L1
@@ -4265,10 +4290,67 @@ const CLASS_DATA = {
     spellcastingAbility: 'cha',
     subclasses: ['Archfey Patron', 'Celestial Patron', 'Fiend Patron', 'Great Old One Patron', 'Genie Patron'],
     subclassData: {
+      // DM-approved Tasha's Cauldron of Everything Genie Patron, retimed to the
+      // 2024 PHB subclass cadence (L3/6/10/14 instead of Tasha's L1/6/10/14).
+      // Kano's pact is locked to the Efreeti kind per his backstory.
       'Genie Patron': {
-        // Populated in Phase 2 with Genie's Vessel, Elemental Gift, Sanctuary Vessel, Limited Wish.
-        // Efreeti-specific Bottled Respite damage type is fire; Genie's Wrath bonus = +PB fire dmg once/turn.
-        perLevel: {}
+        kind: 'Efreeti',
+        kindDamageType: 'fire',
+        // Spells added to the Warlock prepared-spell list when this subclass is chosen.
+        // Keyed by minimum slot level required to prepare them; the picker auto-includes
+        // when the Warlock's current slot level >= the key.
+        expandedSpells: {
+          generic: {
+            1: [{ name: 'Detect Evil and Good', school: 'Divination',  time: 'Action',       range: 'Self',     components: 'V, S',    duration: 'C, up to 10 minutes', concentration: true }],
+            2: [{ name: 'Phantasmal Force',     school: 'Illusion',    time: 'Action',       range: '60 feet',  components: 'V, S, M', duration: 'C, up to 1 minute',   concentration: true }],
+            3: [{ name: 'Create Food and Water',school: 'Conjuration', time: 'Action',       range: '30 feet',  components: 'V, S',    duration: 'Instantaneous' }],
+            4: [{ name: 'Phantasmal Killer',    school: 'Illusion',    time: 'Action',       range: '120 feet', components: 'V, S',    duration: 'C, up to 1 minute',   concentration: true }],
+            5: [{ name: 'Creation',             school: 'Illusion',    time: '1 minute',     range: '30 feet',  components: 'V, S, M', duration: 'Special' }]
+          },
+          Efreeti: {
+            1: [{ name: 'Burning Hands',        school: 'Evocation',   time: 'Action',       range: 'Self (15-ft cone)', components: 'V, S',  duration: 'Instantaneous' }],
+            2: [{ name: 'Scorching Ray',        school: 'Evocation',   time: 'Action',       range: '120 feet', components: 'V, S',    duration: 'Instantaneous' }],
+            3: [{ name: 'Fireball',             school: 'Evocation',   time: 'Action',       range: '150 feet', components: 'V, S, M', duration: 'Instantaneous' }],
+            4: [{ name: 'Fire Shield',          school: 'Evocation',   time: 'Action',       range: 'Self',     components: 'V, S, M', duration: '10 minutes' }],
+            5: [{ name: 'Flame Strike',         school: 'Evocation',   time: 'Action',       range: '60 feet',  components: 'V, S, M', duration: 'Instantaneous' }]
+          },
+          Dao: {
+            1: [{ name: 'Sanctuary',            school: 'Abjuration',  time: 'Bonus Action', range: '30 feet',  components: 'V, S, M', duration: '1 minute' }],
+            2: [{ name: 'Spike Growth',         school: 'Transmutation', time: 'Action',     range: '150 feet', components: 'V, S, M', duration: 'C, up to 10 minutes', concentration: true }],
+            3: [{ name: 'Meld into Stone',      school: 'Transmutation', time: 'Action',     range: 'Self',     components: 'V, S',    duration: '8 hours' }],
+            4: [{ name: 'Stone Shape',          school: 'Transmutation', time: 'Action',     range: 'Touch',    components: 'V, S, M', duration: 'Instantaneous' }],
+            5: [{ name: 'Wall of Stone',        school: 'Evocation',   time: 'Action',       range: '120 feet', components: 'V, S, M', duration: 'C, up to 10 minutes', concentration: true }]
+          },
+          Djinni: {
+            1: [{ name: 'Thunderwave',          school: 'Evocation',   time: 'Action',       range: 'Self (15-ft cube)', components: 'V, S', duration: 'Instantaneous' }],
+            2: [{ name: 'Gust of Wind',         school: 'Evocation',   time: 'Action',       range: 'Self (60-ft line)', components: 'V, S, M', duration: 'C, up to 1 minute', concentration: true }],
+            3: [{ name: 'Wind Wall',            school: 'Evocation',   time: 'Action',       range: '120 feet', components: 'V, S, M', duration: 'C, up to 1 minute',   concentration: true }],
+            4: [{ name: 'Greater Invisibility', school: 'Illusion',    time: 'Action',       range: 'Touch',    components: 'V, S',    duration: 'C, up to 1 minute',   concentration: true }],
+            5: [{ name: 'Seeming',              school: 'Illusion',    time: 'Action',       range: '30 feet',  components: 'V, S',    duration: '8 hours' }]
+          },
+          Marid: {
+            1: [{ name: 'Fog Cloud',            school: 'Conjuration', time: 'Action',       range: '120 feet', components: 'V, S',    duration: 'C, up to 1 hour',     concentration: true }],
+            2: [{ name: 'Blur',                 school: 'Illusion',    time: 'Action',       range: 'Self',     components: 'V',       duration: 'C, up to 1 minute',   concentration: true }],
+            3: [{ name: 'Sleet Storm',          school: 'Conjuration', time: 'Action',       range: '150 feet', components: 'V, S, M', duration: 'C, up to 1 minute',   concentration: true }],
+            4: [{ name: 'Control Water',        school: 'Transmutation', time: 'Action',     range: '300 feet', components: 'V, S, M', duration: 'C, up to 10 minutes', concentration: true }],
+            5: [{ name: 'Cone of Cold',         school: 'Evocation',   time: 'Action',       range: 'Self (60-ft cone)', components: 'V, S, M', duration: 'Instantaneous' }]
+          }
+        },
+        perLevel: {
+          3: [
+            { name: "Genie's Vessel",   desc: "Your patron gifts you a Tiny magical vessel (oil lamp, urn, ring, bottle, statuette, or ornate lantern of your choice) usable as a Spellcasting Focus. Vessel AC = your spell save DC. HP = Warlock level + PB. Immune to poison/psychic. If destroyed/lost, a 1-hour ceremony (during a Short/Long Rest) summons a replacement. The vessel vanishes when you die. While touching the vessel, you gain two features:\n\n· Bottled Respite (Action): magically vanish into the vessel — an extradimensional 20-ft-radius × 20-ft-high cylinder with cushions and low tables. Stay up to 2 × PB hours; hear surroundings as if in vessel's space. Exit early by Bonus Action, by dying, or if vessel is destroyed; reappear in nearest unoccupied space. Once used, can't re-enter until you finish a Long Rest.\n\n· Genie's Wrath (passive): once per turn when you hit with an attack roll, deal extra damage to the target equal to your PB — type determined by your patron (Kano: FIRE for Efreeti)." },
+            { name: 'Genie Expanded Spells', desc: "Genie + Efreeti spells are added to your Warlock spell list and become available to prepare as their slot level unlocks. Generic Genie: Detect Evil and Good (1st), Phantasmal Force (2nd), Create Food and Water (3rd), Phantasmal Killer (4th), Creation (5th). Efreeti: Burning Hands, Scorching Ray, Fireball, Fire Shield, Flame Strike." }
+          ],
+          6: [
+            { name: 'Elemental Gift', desc: "You take on characteristics of your Efreeti patron's kind: Resistance to FIRE damage. As a Bonus Action, you can grant yourself a Flying Speed of 30 ft (including hover) for 10 minutes. Usable PB times per Long Rest." }
+          ],
+          10: [
+            { name: 'Sanctuary Vessel', desc: "When you Bottled Respite, you can also draw up to 5 willing creatures within 30 ft of you into the vessel with you. Bonus Action: eject any number of creatures (or all eject if you leave/die/vessel is destroyed). Anyone (including you) who stays inside ≥10 minutes gains the benefit of a Short Rest, and can add your PB to any HP regained from spent Hit Dice during that short rest." }
+          ],
+          14: [
+            { name: 'Limited Wish', desc: "Action: speak your desire to your Genie's Vessel, requesting the effect of one spell of level 6 or lower with a casting time of 1 Action. The spell can be from ANY class's spell list. You don't need to meet its requirements (including costly components) — the spell simply takes effect. Once used, you can't use it again until you finish 1d4 Long Rests." }
+          ]
+        }
       }
     },
     // Per-class-level progression. Each entry includes:
@@ -4279,91 +4361,90 @@ const CLASS_DATA = {
     //   mysticArcanum: list of accessible Mystic Arcanum spell levels
     perLevel: [
       null,
-      // L1
+      // L1 — Eldritch Invocations (1), Pact Magic
       { features: [
-          { name: 'Pact Magic', desc: 'Cast Warlock spells using CHA. Spellcasting Focus: an Arcane Focus or any weapon you wield. Pact Magic slots recover on a Short Rest. 1 slot at 1st level.' },
-          { name: 'Eldritch Invocations', desc: 'Learn 2 Eldritch Invocations. Swap one when you finish a Long Rest.' },
-          { name: 'Magical Cunning', desc: 'Once per day, after a Short Rest, spend 1 minute meditating to regain expended Pact Magic slots up to half your maximum (round up).' }
-        ], cantrips: 2, prepared: 2, pactSlots: { count: 1, level: 1 }, invocations: 2 },
-      // L2
+          { name: 'Eldritch Invocations', desc: 'You gain 1 Eldritch Invocation of your choice (such as Pact of the Tome). Some invocations have prerequisites. Whenever you gain a Warlock level, you can replace one invocation with another you qualify for (unless it\'s a prerequisite for another invocation you have). You cannot pick the same invocation more than once unless its description says otherwise.' },
+          { name: 'Pact Magic', desc: 'You cast Warlock spells using Charisma. Spellcasting Focus: an Arcane Focus. Know 2 cantrips and prepare 2 Warlock spells of 1st level. Pact Magic spell slots recover on a Short OR Long Rest. When you cast a spell using a Pact Magic slot, it is always cast at the slot level shown in the Warlock table (currently 1st-level slots). Whenever you gain a Warlock level, you can replace one cantrip and one prepared spell.' }
+        ], cantrips: 2, prepared: 2, pactSlots: { count: 1, level: 1 }, invocations: 1 },
+      // L2 — Magical Cunning, +2 Eldritch Invocations (3 total)
       { features: [
-          { name: '+1 Eldritch Invocation', desc: 'Learn 1 additional Eldritch Invocation (3 total).' }
+          { name: 'Magical Cunning', desc: 'You can perform an esoteric rite for 1 minute. At the end of it, you regain expended Pact Magic spell slots up to a number equal to HALF your maximum (rounded up). Once per Long Rest.' },
+          { name: '+2 Eldritch Invocations', desc: 'You now know 3 Eldritch Invocations total (gained 2 at this level).' }
         ], cantrips: 2, prepared: 3, pactSlots: { count: 2, level: 1 }, invocations: 3 },
-      // L3
+      // L3 — Warlock Subclass
       { features: [
-          { name: 'Otherworldly Patron', desc: 'Pick a Patron subclass — gain its level 3 features.' }
+          { name: 'Warlock Subclass', desc: 'Choose a Warlock subclass: Archfey, Celestial, Fiend, or Great Old One Patron (or DM-approved alternatives like Genie). Gain its level 3 features.' }
         ], cantrips: 2, prepared: 4, pactSlots: { count: 2, level: 2 }, invocations: 3, subclassPick: true },
-      // L4
+      // L4 — ASI / +1 cantrip / +1 prepared
       { features: [
-          { name: 'Ability Score Improvement', desc: 'ASI or Feat of your choice.' },
-          { name: '+1 Eldritch Invocation', desc: 'Learn 1 additional Eldritch Invocation (4 total).' }
-        ], cantrips: 3, prepared: 5, pactSlots: { count: 2, level: 2 }, invocations: 4, asi: true },
-      // L5
+          { name: 'Ability Score Improvement', desc: 'ASI or Feat of your choice. Gained again at 8, 12, 16.' }
+        ], cantrips: 3, prepared: 5, pactSlots: { count: 2, level: 2 }, invocations: 3, asi: true },
+      // L5 — +2 Eldritch Invocations (5 total), Pact slots level up to 3rd
       { features: [
-          { name: '+1 Eldritch Invocation', desc: 'Learn 1 additional Eldritch Invocation (5 total).' }
+          { name: '+2 Eldritch Invocations', desc: 'You now know 5 Eldritch Invocations total (gained 2 at this level).' }
         ], cantrips: 3, prepared: 6, pactSlots: { count: 2, level: 3 }, invocations: 5 },
-      // L6
+      // L6 — Subclass feature
       { features: [
           { name: 'Subclass Feature', desc: 'See your Patron entry for its level 6 feature.' }
         ], cantrips: 3, prepared: 7, pactSlots: { count: 2, level: 3 }, invocations: 5 },
-      // L7
+      // L7 — +1 Eldritch Invocation (6 total), Pact slots level up to 4th
       { features: [
-          { name: '+1 Eldritch Invocation', desc: 'Learn 1 additional Eldritch Invocation (6 total).' }
+          { name: '+1 Eldritch Invocation', desc: 'You now know 6 Eldritch Invocations total.' }
         ], cantrips: 3, prepared: 8, pactSlots: { count: 2, level: 4 }, invocations: 6 },
-      // L8
+      // L8 — ASI
       { features: [
           { name: 'Ability Score Improvement', desc: 'ASI or Feat of your choice.' }
         ], cantrips: 3, prepared: 9, pactSlots: { count: 2, level: 4 }, invocations: 6, asi: true },
-      // L9
+      // L9 — Contact Patron, +1 Eldritch Invocation (7 total), Pact slots level up to 5th
       { features: [
-          { name: 'Contact Patron', desc: 'You can cast Contact Other Plane as a Ritual to contact your patron, without risk of the usual failure save. No Material Component needed when used this way.' },
-          { name: '+1 Eldritch Invocation', desc: 'Learn 1 additional Eldritch Invocation (7 total).' }
+          { name: 'Contact Patron', desc: 'You always have Contact Other Plane prepared. You can cast it without expending a spell slot and you automatically succeed on the saving throw. 1/Long Rest in this way.' },
+          { name: '+1 Eldritch Invocation', desc: 'You now know 7 Eldritch Invocations total.' }
         ], cantrips: 3, prepared: 10, pactSlots: { count: 2, level: 5 }, invocations: 7 },
-      // L10
+      // L10 — Subclass feature / +1 cantrip
       { features: [
           { name: 'Subclass Feature', desc: 'See your Patron entry for its level 10 feature.' }
         ], cantrips: 4, prepared: 10, pactSlots: { count: 2, level: 5 }, invocations: 7 },
-      // L11
+      // L11 — Mystic Arcanum (6th-level), 3 Pact slots
       { features: [
-          { name: 'Mystic Arcanum (6th-level)', desc: 'Pick one 6th-level Warlock spell. You can cast it once per Long Rest without expending a slot.' }
+          { name: 'Mystic Arcanum (Level 6)', desc: 'Choose one 6th-level Warlock spell as your arcanum. You can cast it once without expending a slot; recover on a Long Rest. Whenever you gain a Warlock level, you can swap it for another 6th-level Warlock spell.' }
         ], cantrips: 4, prepared: 11, pactSlots: { count: 3, level: 5 }, invocations: 7, mysticArcanum: [6] },
-      // L12
+      // L12 — ASI / +1 Eldritch Invocation (8 total)
       { features: [
           { name: 'Ability Score Improvement', desc: 'ASI or Feat of your choice.' },
-          { name: '+1 Eldritch Invocation', desc: 'Learn 1 additional Eldritch Invocation (8 total).' }
+          { name: '+1 Eldritch Invocation', desc: 'You now know 8 Eldritch Invocations total.' }
         ], cantrips: 4, prepared: 11, pactSlots: { count: 3, level: 5 }, invocations: 8, mysticArcanum: [6], asi: true },
-      // L13
+      // L13 — Mystic Arcanum (7th-level)
       { features: [
-          { name: 'Mystic Arcanum (7th-level)', desc: 'Pick one 7th-level Warlock spell. Castable 1/Long Rest.' }
+          { name: 'Mystic Arcanum (Level 7)', desc: 'Choose one 7th-level Warlock spell. Castable 1/Long Rest without a slot.' }
         ], cantrips: 4, prepared: 12, pactSlots: { count: 3, level: 5 }, invocations: 8, mysticArcanum: [6, 7] },
-      // L14
+      // L14 — Subclass feature
       { features: [
           { name: 'Subclass Feature', desc: 'See your Patron entry for its level 14 feature.' }
         ], cantrips: 4, prepared: 12, pactSlots: { count: 3, level: 5 }, invocations: 8, mysticArcanum: [6, 7] },
-      // L15
+      // L15 — Mystic Arcanum (8th-level) / +1 Eldritch Invocation (9 total)
       { features: [
-          { name: 'Mystic Arcanum (8th-level)', desc: 'Pick one 8th-level Warlock spell. Castable 1/Long Rest.' },
-          { name: '+1 Eldritch Invocation', desc: 'Learn 1 additional Eldritch Invocation (9 total).' }
+          { name: 'Mystic Arcanum (Level 8)', desc: 'Choose one 8th-level Warlock spell. Castable 1/Long Rest without a slot.' },
+          { name: '+1 Eldritch Invocation', desc: 'You now know 9 Eldritch Invocations total.' }
         ], cantrips: 4, prepared: 13, pactSlots: { count: 3, level: 5 }, invocations: 9, mysticArcanum: [6, 7, 8] },
-      // L16
+      // L16 — ASI
       { features: [
           { name: 'Ability Score Improvement', desc: 'ASI or Feat of your choice.' }
         ], cantrips: 4, prepared: 13, pactSlots: { count: 3, level: 5 }, invocations: 9, mysticArcanum: [6, 7, 8], asi: true },
-      // L17
+      // L17 — Mystic Arcanum (9th-level), 4 Pact slots
       { features: [
-          { name: 'Mystic Arcanum (9th-level)', desc: 'Pick one 9th-level Warlock spell. Castable 1/Long Rest.' }
+          { name: 'Mystic Arcanum (Level 9)', desc: 'Choose one 9th-level Warlock spell. Castable 1/Long Rest without a slot.' }
         ], cantrips: 4, prepared: 14, pactSlots: { count: 4, level: 5 }, invocations: 9, mysticArcanum: [6, 7, 8, 9] },
-      // L18
+      // L18 — +1 Eldritch Invocation (10 total)
       { features: [
-          { name: 'Eldritch Master', desc: 'Once per Long Rest, spend 1 minute meditating to regain ALL expended Pact Magic spell slots.' }
-        ], cantrips: 4, prepared: 14, pactSlots: { count: 4, level: 5 }, invocations: 9, mysticArcanum: [6, 7, 8, 9] },
-      // L19
+          { name: '+1 Eldritch Invocation', desc: 'You now know 10 Eldritch Invocations total.' }
+        ], cantrips: 4, prepared: 14, pactSlots: { count: 4, level: 5 }, invocations: 10, mysticArcanum: [6, 7, 8, 9] },
+      // L19 — Epic Boon
       { features: [
-          { name: 'Epic Boon', desc: 'Gain an Epic Boon feat (Boon of Spell Recall recommended for casters).' }
-        ], cantrips: 4, prepared: 15, pactSlots: { count: 4, level: 5 }, invocations: 9, mysticArcanum: [6, 7, 8, 9], asi: true },
-      // L20
+          { name: 'Epic Boon', desc: 'Gain an Epic Boon feat or another feat of your choice for which you qualify. Boon of Fate is recommended.' }
+        ], cantrips: 4, prepared: 15, pactSlots: { count: 4, level: 5 }, invocations: 10, mysticArcanum: [6, 7, 8, 9], asi: true },
+      // L20 — Eldritch Master
       { features: [
-          { name: '+1 Eldritch Invocation', desc: 'Learn 1 additional Eldritch Invocation (10 total).' }
+          { name: 'Eldritch Master', desc: 'When you use your Magical Cunning feature, you regain ALL your expended Pact Magic spell slots (instead of half).' }
         ], cantrips: 4, prepared: 15, pactSlots: { count: 4, level: 5 }, invocations: 10, mysticArcanum: [6, 7, 8, 9] }
     ]
   }
@@ -4470,7 +4551,11 @@ const DEFAULT_STATE = {
   // Barbarian Rage tracking
   ragesUsed: 0,              // count of rages spent this Long Rest
   rageActive: false,         // currently raging right now
-  recklessAttackOn: false    // Reckless Attack toggled on for current turn
+  recklessAttackOn: false,   // Reckless Attack toggled on for current turn
+  // Warlock Pact Magic + Invocations tracking
+  pactSlotsUsed: 0,          // count of Pact Magic slots spent (short-rest recovery)
+  warlockInvocations: [],    // names of Eldritch Invocations currently known
+  magicalCunningUsed: false  // Warlock L2 Magical Cunning: 1/Long Rest slot refill
 };
 
 let state = loadState();
@@ -4893,6 +4978,33 @@ function renderCombatResources(level) {
   const dynRows = document.getElementById('combat-resources-dynamic');
   dynRows.innerHTML = '';
 
+  // ---- Pact Magic slots ---- (Warlock L1+, recovers on Short OR Long Rest)
+  if (w >= 1) {
+    const wlData = CLASS_DATA.warlock.perLevel[w];
+    if (wlData && wlData.pactSlots) {
+      const slotsMax = wlData.pactSlots.count;
+      const slotsUsed = Math.min(state.pactSlotsUsed || 0, slotsMax);
+      const slotLevel = wlData.pactSlots.level;
+      const cunningAvailable = w >= 2 && !state.magicalCunningUsed;
+      const row = document.createElement('div');
+      row.className = 'resource-row pact-row';
+      const tipText = `Pact Magic spell slots — all cast at level ${slotLevel}. Recover ALL on a Short or Long Rest. ${cunningAvailable ? 'Magical Cunning available: 1-minute meditation regains slots up to half max.' : (w >= 2 ? 'Magical Cunning USED (Long Rest to reset).' : '')}`;
+      row.innerHTML = `
+        <span class="resource-label has-tip" title="${tipText}">Pact Magic <span class="resource-meta">slot ${slotLevel}${cunningAvailable ? ' · Cunning ready' : ''}</span></span>
+        <div class="resource-pips" data-resource="pact"></div>
+      `;
+      const pipsBox = row.querySelector('.resource-pips');
+      for (let i = 0; i < slotsMax; i++) {
+        const pip = document.createElement('div');
+        pip.className = 'pip' + (i >= slotsMax - slotsUsed ? ' used' : '');
+        pip.title = `Pact Magic slot ${i + 1}`;
+        pip.addEventListener('click', () => togglePactSlot(i, slotsMax));
+        pipsBox.appendChild(pip);
+      }
+      dynRows.appendChild(row);
+    }
+  }
+
   // ---- Rage ---- (Barbarian L1+, Long Rest refill, Short Rest refunds 1)
   if (b >= 1) {
     const barbData = CLASS_DATA.barbarian.perLevel[b];
@@ -5049,6 +5161,15 @@ function toggleHitDie(index, max) {
   const used = state.hitDiceUsed || 0;
   const isAvailable = index < (max - used);
   state.hitDiceUsed = isAvailable ? (max - index) : (max - index - 1);
+  saveState();
+  render();
+}
+
+// Pact Magic slot pip click — spend or refund a slot.
+function togglePactSlot(index, max) {
+  const used = state.pactSlotsUsed || 0;
+  const isAvailable = index < (max - used);
+  state.pactSlotsUsed = isAvailable ? (max - index) : (max - index - 1);
   saveState();
   render();
 }
@@ -5309,11 +5430,10 @@ function renderConditions() {
 function renderConcentrationOptions(level) {
   const sel = document.getElementById('concentration-select');
   sel.innerHTML = '<option value="">— not concentrating —</option>';
-  // Concentration options are the union of prepared spells + Armorer always-prepared,
-  // filtered to spells with concentration: true in the SPELLS catalog.
-  const { a } = classBreakdown(level);
-  const known = new Set([...(state.preparedSpells || []), ...getArmorerAlwaysPrepared(a)]);
-  const options = SPELLS.filter(s => s.concentration && known.has(s.name));
+  // Concentration options = prepared spells flagged concentration: true, looked up
+  // in SPELLS first and falling back to subclass-expanded lists.
+  const known = new Set(state.preparedSpells || []);
+  const options = [...known].map(findSpellByName).filter(s => s && s.concentration);
   options.sort((a, b) => {
     const da = spellLevelToNum(a.level) - spellLevelToNum(b.level);
     return da !== 0 ? da : a.name.localeCompare(b.name);
@@ -5329,45 +5449,32 @@ function renderConcentrationOptions(level) {
 
 function renderMagicCard(level) {
   const card = document.getElementById('magic-card');
-  const { a } = classBreakdown(level);
-  if (a === 0) {
+  const { w } = classBreakdown(level);
+  if (w === 0) {
     card.hidden = true;
     return;
   }
   card.hidden = false;
 
-  // Spell slots — Artificer half-caster table
+  // Pact Magic slot summary (single tier; pip controls live in Combat Resources)
   const slotsContainer = document.getElementById('spell-slots');
   slotsContainer.innerHTML = '';
-  const artData = CLASS_DATA.artificer.perLevel[a];
-  if (artData && artData.slots) {
-    artData.slots.forEach((count, idx) => {
-      if (count === 0) return;
-      const lvl = idx + 1;
-      const key = `sorc${lvl}`;
-      const used = state.usedSlots[key] || 0;
-      const row = document.createElement('div');
-      row.className = 'slot-row';
-      row.innerHTML = `<span class="slot-label">${ordinalSpellLevel(lvl)}</span>`;
-      const pipsBox = document.createElement('div');
-      pipsBox.className = 'slot-pips';
-      for (let i = 0; i < count; i++) {
-        const pip = document.createElement('div');
-        pip.className = 'pip' + (i >= count - used ? ' used' : '');
-        pip.addEventListener('click', () => togglePip(key, i, count));
-        pipsBox.appendChild(pip);
-      }
-      row.appendChild(pipsBox);
-      slotsContainer.appendChild(row);
-    });
+  const wlData = CLASS_DATA.warlock.perLevel[w];
+  if (wlData && wlData.pactSlots) {
+    const slotsUsed = Math.min(state.pactSlotsUsed || 0, wlData.pactSlots.count);
+    const slotsAvail = wlData.pactSlots.count - slotsUsed;
+    const summary = document.createElement('div');
+    summary.className = 'slot-row';
+    summary.innerHTML = `<span class="slot-label">Pact Magic</span><span class="resource-readout" style="margin-left:auto;">${slotsAvail} / ${wlData.pactSlots.count} · slot ${wlData.pactSlots.level}</span>`;
+    slotsContainer.appendChild(summary);
   }
 
   // Cantrips list
   const cantripList = document.getElementById('cantrip-list');
   cantripList.innerHTML = '';
-  const cantrips = (state.cantripsKnown || []).map(name => SPELLS.find(s => s.name === name)).filter(Boolean);
+  const cantrips = (state.cantripsKnown || []).map(name => findSpellByName(name)).filter(Boolean);
   cantrips.sort((a, b) => a.name.localeCompare(b.name));
-  document.getElementById('cantrip-count').textContent = `${cantrips.length} / ${artData ? artData.cantrips : 0}`;
+  document.getElementById('cantrip-count').textContent = `${cantrips.length} / ${wlData ? wlData.cantrips : 0}`;
   if (cantrips.length === 0) {
     cantripList.innerHTML = '<p style="font-style: italic; color: var(--parchment-aged); font-size: 0.85rem; margin: 0.4rem 0;">No cantrips yet.</p>';
   } else {
@@ -5386,15 +5493,13 @@ function renderMagicCard(level) {
   // Prepared list — show user picks tagged normally, Armorer always-prepared tagged "auto"
   const preparedList = document.getElementById('prepared-list');
   preparedList.innerHTML = '';
-  const userPrepared = (state.preparedSpells || []).map(name => ({ spell: SPELLS.find(s => s.name === name), always: false })).filter(x => x.spell);
-  const armorerAlwaysPrep = getArmorerAlwaysPrepared(a);
-  const alwaysPreparedSpells = armorerAlwaysPrep.map(name => ({ spell: SPELLS.find(s => s.name === name) || { name, level: '—', school: 'Armorer', time: '—', range: '—' }, always: true }));
-  const all = [...userPrepared, ...alwaysPreparedSpells];
+  const userPrepared = (state.preparedSpells || []).map(name => ({ spell: findSpellByName(name), always: false })).filter(x => x.spell);
+  const all = [...userPrepared];
   all.sort((a, b) => {
     const da = spellLevelToNum(a.spell.level) - spellLevelToNum(b.spell.level);
     return da !== 0 ? da : a.spell.name.localeCompare(b.spell.name);
   });
-  document.getElementById('prepared-count').textContent = `${userPrepared.length} / ${artData ? artData.prepared : 0}${alwaysPreparedSpells.length ? ` (+${alwaysPreparedSpells.length} auto)` : ''}`;
+  document.getElementById('prepared-count').textContent = `${userPrepared.length} / ${wlData ? wlData.prepared : 0}`;
   if (all.length === 0) {
     preparedList.innerHTML = '<p style="font-style: italic; color: var(--parchment-aged); font-size: 0.85rem; margin: 0.4rem 0;">No prepared spells yet.</p>';
   } else {
@@ -5939,24 +6044,17 @@ function renderSpells(level) {
 function getValidSlotTiers(spell, level) {
   const minLevel = spellLevelToNum(spell.level);
   if (!minLevel) return []; // cantrip
-  const { a } = classBreakdown(level);
-  const artData = CLASS_DATA.artificer.perLevel[a];
-  if (!artData || !artData.slots) return [];
-  const tiers = [];
-  for (let i = 0; i < artData.slots.length; i++) {
-    const lvl = i + 1;
-    const count = artData.slots[i];
-    if (count === 0) continue;
-    if (lvl < minLevel) continue;
-    const key = `sorc${lvl}`;
-    tiers.push({
-      key,
-      label: `${ordinalSpellLevel(lvl)} slot`,
-      max: count,
-      used: state.usedSlots[key] || 0
-    });
-  }
-  return tiers;
+  const { w } = classBreakdown(level);
+  if (w < 1) return [];
+  const wlData = CLASS_DATA.warlock.perLevel[w];
+  if (!wlData || !wlData.pactSlots) return [];
+  if (wlData.pactSlots.level < minLevel) return [];
+  return [{
+    key: 'pact',
+    label: `Pact slot (${ordinalSpellLevel(wlData.pactSlots.level)})`,
+    max: wlData.pactSlots.count,
+    used: state.pactSlotsUsed || 0
+  }];
 }
 
 function openCastPopover(spell, anchor) {
@@ -5985,7 +6083,12 @@ function openCastPopover(spell, anchor) {
       opt.innerHTML = `<span>${t.label}</span><span class="tier-count">×${remaining}</span>`;
       opt.addEventListener('click', (e) => {
         e.stopPropagation();
-        state.usedSlots[t.key] = (state.usedSlots[t.key] || 0) + 1;
+        // Pact slots live on state.pactSlotsUsed; legacy half-caster keys on state.usedSlots
+        if (t.key === 'pact') {
+          state.pactSlotsUsed = (state.pactSlotsUsed || 0) + 1;
+        } else {
+          state.usedSlots[t.key] = (state.usedSlots[t.key] || 0) + 1;
+        }
         saveState();
         closeCastPopover();
         render();
@@ -6235,6 +6338,9 @@ function renderLevelTable(currentLevel) {
     if (entry.spellsAdded && entry.spellsAdded.length > 0) {
       parts.push(`<strong>+Prepared:</strong> ${entry.spellsAdded.join(', ')}`);
     }
+    if (entry.invocationsAdded && entry.invocationsAdded.length > 0) {
+      parts.push(`<strong>+Invocations:</strong> ${entry.invocationsAdded.join(', ')}`);
+    }
     if (entry.plansAdded && entry.plansAdded.length > 0) {
       parts.push(`<strong>+Plans:</strong> ${entry.plansAdded.join(', ')}`);
     }
@@ -6391,18 +6497,81 @@ function ordinalSpellLevel(n) {
   if (n === 0) return 'Cantrip';
   return ['1st','2nd','3rd','4th','5th','6th','7th','8th','9th'][n - 1] || (n + 'th');
 }
-// Highest spell level accessible at a given Artificer level (the level table)
-function maxAccessibleSpellLevel(artificerLevel) {
-  const data = CLASS_DATA.artificer.perLevel[artificerLevel];
-  if (!data || !data.slots) return 0;
-  for (let i = data.slots.length - 1; i >= 0; i--) {
-    if (data.slots[i] > 0) return i + 1;
+// Highest spell level accessible at a given class-level. Class-agnostic:
+// supports both Warlock (.pactSlots.level) and half-caster slot arrays.
+function maxAccessibleSpellLevel(klass, classLevel) {
+  const data = CLASS_DATA[klass] && CLASS_DATA[klass].perLevel[classLevel];
+  if (!data) return 0;
+  if (data.pactSlots) return data.pactSlots.level;
+  if (data.slots) {
+    for (let i = data.slots.length - 1; i >= 0; i--) {
+      if (data.slots[i] > 0) return i + 1;
+    }
   }
   return 0;
 }
 // Cantrips currently in state.cantripsKnown
 function getKnownCantrips() {
   return new Set(state.cantripsKnown || []);
+}
+
+// Lookup a spell by name across the base SPELLS list AND any subclass-expanded
+// lists (e.g., Genie + kind-specific). Returns SPELLS-shape object or null.
+function findSpellByName(name) {
+  const base = SPELLS.find(s => s.name === name);
+  if (base) return base;
+  // Walk subclass expanded lists for the chosen Warlock subclass
+  const sub = findChosenSubclass('warlock');
+  if (!sub) return null;
+  const cls = CLASS_DATA.warlock;
+  const subData = cls.subclassData && cls.subclassData[sub];
+  if (!subData || !subData.expandedSpells) return null;
+  for (const bucket of Object.keys(subData.expandedSpells)) {
+    for (const lvl of Object.keys(subData.expandedSpells[bucket])) {
+      const found = subData.expandedSpells[bucket][lvl].find(s => s.name === name);
+      if (found) {
+        return {
+          ...found,
+          level: ['1st','2nd','3rd','4th','5th','6th','7th','8th','9th'][parseInt(lvl, 10) - 1],
+          subclassExpanded: bucket === 'generic' ? 'Genie' : bucket
+        };
+      }
+    }
+  }
+  return null;
+}
+
+// For Warlock subclasses that add expanded spells to the prepared-spell list
+// (Genie Patron's generic Genie list + per-kind list), return flat spell objects
+// formatted like SPELLS entries. Filtered by max accessible slot level + dedup.
+function getExpandedSpellsFor(klass, maxLvl, knownSet) {
+  if (klass !== 'warlock') return [];
+  const sub = findChosenSubclass('warlock');
+  if (!sub) return [];
+  const cls = CLASS_DATA.warlock;
+  const subData = cls.subclassData && cls.subclassData[sub];
+  if (!subData || !subData.expandedSpells) return [];
+  const kind = subData.kind;
+  const buckets = ['generic'];
+  if (kind && subData.expandedSpells[kind]) buckets.push(kind);
+  const out = [];
+  const seen = new Set();
+  for (const bucket of buckets) {
+    const bySpellLevel = subData.expandedSpells[bucket] || {};
+    for (let l = 1; l <= maxLvl; l++) {
+      const list = bySpellLevel[l] || [];
+      for (const spell of list) {
+        if (knownSet.has(spell.name) || seen.has(spell.name)) continue;
+        seen.add(spell.name);
+        out.push({
+          ...spell,
+          level: ['1st','2nd','3rd','4th','5th','6th','7th','8th','9th'][l - 1],
+          subclassExpanded: bucket === 'generic' ? 'Genie' : kind
+        });
+      }
+    }
+  }
+  return out;
 }
 // Prepared spells (active + always-prepared from Armorer subclass)
 function getPreparedSet() {
@@ -6420,27 +6589,35 @@ function getArmorerAlwaysPrepared(artificerLevel) {
   return out;
 }
 
-// Build the spell-picker portion of the modal. Returns HTML string or empty.
+// Build the spell-picker portion of the modal. Class-agnostic — any class with
+// `cantrips` and `prepared` counts in CLASS_DATA[klass].perLevel triggers it.
+// Returns HTML string or empty.
 function buildSpellPickerHTML(klass, classLevel) {
-  if (klass !== 'artificer') return '';
-  const data = CLASS_DATA.artificer.perLevel[classLevel];
-  const prev = classLevel > 1 ? CLASS_DATA.artificer.perLevel[classLevel - 1] : null;
-  const cantripDelta = prev ? data.cantrips - prev.cantrips : data.cantrips;
-  const preparedDelta = prev ? data.prepared - prev.prepared : data.prepared;
+  const cls = CLASS_DATA[klass];
+  if (!cls) return '';
+  const data = cls.perLevel[classLevel];
+  if (!data) return '';
+  if (data.cantrips == null && data.prepared == null) return '';
+
+  const prev = classLevel > 1 ? cls.perLevel[classLevel - 1] : null;
+  const cantripDelta = prev ? (data.cantrips || 0) - (prev.cantrips || 0) : (data.cantrips || 0);
+  const preparedDelta = prev ? (data.prepared || 0) - (prev.prepared || 0) : (data.prepared || 0);
   if (cantripDelta <= 0 && preparedDelta <= 0) return '';
 
   const knownCantrips = getKnownCantrips();
   const eligibleCantrips = SPELLS.filter(s => s.level === 'Cantrip' && !knownCantrips.has(s.name));
 
-  const maxLvl = maxAccessibleSpellLevel(classLevel);
+  const maxLvl = maxAccessibleSpellLevel(klass, classLevel);
   const known = getPreparedSet();
-  const eligiblePrepared = SPELLS.filter(s => {
+  const baseSpells = SPELLS.filter(s => {
     if (s.level === 'Cantrip') return false;
     if (s.subclassOnly) return false;
     if (known.has(s.name)) return false;
     return spellLevelToNum(s.level) <= maxLvl;
   });
-  // Sort prepared by level then name
+  // Merge in subclass-expanded spells (e.g., Genie + kind-specific Warlock list)
+  const expanded = getExpandedSpellsFor(klass, maxLvl, known);
+  const eligiblePrepared = [...baseSpells, ...expanded];
   eligiblePrepared.sort((a, b) => {
     const da = spellLevelToNum(a.level) - spellLevelToNum(b.level);
     return da !== 0 ? da : a.name.localeCompare(b.name);
@@ -6449,7 +6626,7 @@ function buildSpellPickerHTML(klass, classLevel) {
   let html = '';
   if (cantripDelta > 0) {
     html += `<div class="modal-prompt">
-      <div class="modal-prompt-label">Pick ${cantripDelta} cantrip${cantripDelta > 1 ? 's' : ''}</div>
+      <div class="modal-prompt-label">Pick ${cantripDelta} ${cls.name} cantrip${cantripDelta > 1 ? 's' : ''}</div>
       <div class="spell-picker" data-pick="cantrip" data-max="${cantripDelta}">
         ${eligibleCantrips.map(s => `
           <label class="spell-pick">
@@ -6464,12 +6641,12 @@ function buildSpellPickerHTML(klass, classLevel) {
   }
   if (preparedDelta > 0) {
     html += `<div class="modal-prompt">
-      <div class="modal-prompt-label">Pick ${preparedDelta} prepared spell${preparedDelta > 1 ? 's' : ''} · up to ${ordinalSpellLevel(maxLvl)}</div>
+      <div class="modal-prompt-label">Pick ${preparedDelta} prepared ${cls.name} spell${preparedDelta > 1 ? 's' : ''} · up to ${ordinalSpellLevel(maxLvl)}</div>
       <div class="spell-picker" data-pick="prepared" data-max="${preparedDelta}">
         ${eligiblePrepared.map(s => `
           <label class="spell-pick">
             <input type="checkbox" value="${s.name}">
-            <span class="spell-pick-name">${s.name}${s.concentration ? ' <span class="conc-tag">C</span>' : ''}</span>
+            <span class="spell-pick-name">${s.name}${s.concentration ? ' <span class="conc-tag">C</span>' : ''}${s.subclassExpanded ? ' <span class="always-tag">' + s.subclassExpanded + '</span>' : ''}</span>
             <span class="spell-pick-meta">${s.level} · ${s.school}</span>
           </label>
         `).join('')}
@@ -6477,7 +6654,75 @@ function buildSpellPickerHTML(klass, classLevel) {
       <div class="spell-picker-count" data-count-for="prepared">0 / ${preparedDelta}</div>
     </div>`;
   }
+
+  // Eldritch Invocation picker (Warlock only)
+  if (klass === 'warlock') {
+    const invocDelta = computeInvocationDelta(classLevel);
+    if (invocDelta > 0) html += buildInvocationPickerHTML(classLevel, invocDelta);
+  }
+
   return html;
+}
+
+// How many new Eldritch Invocations should we pick at this Warlock level?
+// (Delta between current Warlock level's invocation count and previous level's.)
+function computeInvocationDelta(warlockLevel) {
+  const data = CLASS_DATA.warlock.perLevel[warlockLevel];
+  const prev = warlockLevel > 1 ? CLASS_DATA.warlock.perLevel[warlockLevel - 1] : null;
+  if (!data || !data.invocations) return 0;
+  return data.invocations - (prev ? prev.invocations || 0 : 0);
+}
+
+// Build the Eldritch Invocation picker. Filters by minLevel + prereq satisfaction
+// against already-held invocations. Pact of the Blade etc. count as Pact Boon picks.
+function buildInvocationPickerHTML(warlockLevel, count) {
+  const known = new Set(state.warlockInvocations || []);
+  const knownCantrips = new Set([...(state.cantripsKnown || []), ...gatherPendingCantripsFromPicker()]);
+  // Check if a cantrip-prereq is satisfied — needs a Warlock cantrip that deals damage (Eldritch Blast, Chill Touch, etc.)
+  const damageCantrips = new Set(['Eldritch Blast', 'Chill Touch', 'Poison Spray', 'Toll the Dead', 'Mind Sliver', 'Thunderclap', 'Acid Splash', 'Fire Bolt', 'Frostbite', 'Ray of Frost', 'Sword Burst', 'Shocking Grasp']);
+  const hasDamageCantrip = [...knownCantrips].some(c => damageCantrips.has(c));
+  const attackRollDamageCantrips = new Set(['Eldritch Blast', 'Fire Bolt', 'Ray of Frost', 'Shocking Grasp', 'Acid Splash']);
+  const hasAttackRollDamageCantrip = [...knownCantrips].some(c => attackRollDamageCantrips.has(c));
+
+  function meetsPrereqs(inv) {
+    if (inv.minLevel > warlockLevel) return false;
+    for (const pre of (inv.prereqs || [])) {
+      if (pre.endsWith('Invocation')) {
+        const invName = pre.replace(' Invocation', '');
+        if (!known.has(invName)) return false;
+      } else if (pre.includes('Attack Roll')) {
+        if (!hasAttackRollDamageCantrip) return false;
+      } else if (pre.includes('Cantrip That Deals Damage')) {
+        if (!hasDamageCantrip) return false;
+      }
+    }
+    return true;
+  }
+
+  const eligible = INVOCATIONS.filter(inv => !known.has(inv.name) && meetsPrereqs(inv));
+  eligible.sort((a, b) => a.name.localeCompare(b.name));
+
+  return `<div class="modal-prompt">
+    <div class="modal-prompt-label">Pick ${count} Eldritch Invocation${count > 1 ? 's' : ''}</div>
+    <div class="spell-picker" data-pick="invocations" data-max="${count}">
+      ${eligible.map(inv => `
+        <label class="spell-pick">
+          <input type="checkbox" value="${inv.name}">
+          <span class="spell-pick-name">${inv.name}${inv.repeatable ? ' <span class="conc-tag">R</span>' : ''}</span>
+          <span class="spell-pick-meta">${inv.prereqs && inv.prereqs.length > 0 ? inv.prereqs.join('; ') + ' · ' : ''}${inv.desc.length > 110 ? inv.desc.slice(0, 110) + '…' : inv.desc}</span>
+        </label>
+      `).join('')}
+    </div>
+    <div class="spell-picker-count" data-count-for="invocations">0 / ${count}</div>
+  </div>`;
+}
+
+// Helper: gather cantrip names that are pending pick in the current modal.
+// Used so the invocation prereq check sees today's L1 cantrip picks.
+function gatherPendingCantripsFromPicker() {
+  const picker = document.querySelector('.spell-picker[data-pick="cantrip"]');
+  if (!picker) return [];
+  return Array.from(picker.querySelectorAll('input:checked')).map(c => c.value);
 }
 
 // Build the Skills + Tools + Language picker for a level-up entry.
@@ -6943,6 +7188,7 @@ function rebuildDerivedStateFromHistory() {
   state.toolProfs = [];
   state.languages = ['Common'];
   state.weaponMasteries = [];
+  state.warlockInvocations = [];
   let firstClassSet = false;
   for (const e of history) {
     const cls = CLASS_DATA[e.class];
@@ -6960,6 +7206,7 @@ function rebuildDerivedStateFromHistory() {
     }
     if (e.cantripsAdded) state.cantripsKnown.push(...e.cantripsAdded);
     if (e.spellsAdded) state.preparedSpells.push(...e.spellsAdded);
+    if (e.invocationsAdded) state.warlockInvocations.push(...e.invocationsAdded);
     if (e.plansAdded) state.infusionPlans.push(...e.plansAdded);
     if (e.classSkillsAdded) state.skillProfs.push(...e.classSkillsAdded);
     if (e.specializedDesign) {
@@ -7379,27 +7626,25 @@ function confirmLevelUp() {
     }
   }
 
-  // Phase 2D: spell picks (Artificer only)
-  if (entry.class === 'artificer') {
-    const cantripPicker = document.querySelector('.spell-picker[data-pick="cantrip"]');
-    if (cantripPicker) {
-      const picked = Array.from(cantripPicker.querySelectorAll('input:checked')).map(i => i.value);
-      state.cantripsKnown = [...(state.cantripsKnown || []), ...picked];
-      entry.cantripsAdded = picked;
-    }
-    const preparedPicker = document.querySelector('.spell-picker[data-pick="prepared"]');
-    if (preparedPicker) {
-      const picked = Array.from(preparedPicker.querySelectorAll('input:checked')).map(i => i.value);
-      state.preparedSpells = [...(state.preparedSpells || []), ...picked];
-      entry.spellsAdded = picked;
-    }
-    // Phase 2E: infusion plan picks (L2/6/10/14/18)
-    const infusionPicker = document.querySelector('.infusion-picker[data-pick="infusion"]');
-    if (infusionPicker) {
-      const picked = Array.from(infusionPicker.querySelectorAll('input:checked')).map(i => i.value);
-      state.infusionPlans = [...(state.infusionPlans || []), ...picked];
-      entry.plansAdded = picked;
-    }
+  // Spell picks (any class that triggered the picker — Warlock for Kano)
+  const cantripPicker = document.querySelector('.spell-picker[data-pick="cantrip"]');
+  if (cantripPicker) {
+    const picked = Array.from(cantripPicker.querySelectorAll('input:checked')).map(i => i.value);
+    state.cantripsKnown = [...(state.cantripsKnown || []), ...picked];
+    entry.cantripsAdded = picked;
+  }
+  const preparedPicker = document.querySelector('.spell-picker[data-pick="prepared"]');
+  if (preparedPicker) {
+    const picked = Array.from(preparedPicker.querySelectorAll('input:checked')).map(i => i.value);
+    state.preparedSpells = [...(state.preparedSpells || []), ...picked];
+    entry.spellsAdded = picked;
+  }
+  // Eldritch Invocation picks (Warlock only)
+  const invocationPicker = document.querySelector('.spell-picker[data-pick="invocations"]');
+  if (invocationPicker) {
+    const picked = Array.from(invocationPicker.querySelectorAll('input:checked')).map(i => i.value);
+    state.warlockInvocations = [...(state.warlockInvocations || []), ...picked];
+    entry.invocationsAdded = picked;
   }
 
   // Phase 2D: Origin Feat at character level 1, OR ASI/Feat at data.asi levels
@@ -8008,10 +8253,12 @@ document.addEventListener('keydown', (e) => {
 });
 
 document.getElementById('short-rest-btn').addEventListener('click', () => {
-  const { a, r, b, w } = classBreakdown(state.level);
+  const { b, w } = classBreakdown(state.level);
   const recoversRage = b >= 1 && (state.ragesUsed || 0) > 0;
+  const recoversPactMagic = w >= 1 && (state.pactSlotsUsed || 0) > 0;
   const items = [];
   if (recoversRage) items.push('Refund 1 expended Rage use');
+  if (recoversPactMagic) items.push('Refill ALL expended Pact Magic spell slots');
   items.push('Spend Hit Dice manually after — a short rest doesn\'t auto-heal');
   const body = `
     <p>This will:</p>
@@ -8019,6 +8266,7 @@ document.getElementById('short-rest-btn').addEventListener('click', () => {
   `;
   showConfirm('Take a Short Rest?', body, () => {
     if (recoversRage) state.ragesUsed = Math.max(0, state.ragesUsed - 1);
+    if (recoversPactMagic) state.pactSlotsUsed = 0;
     saveState();
     render();
   }, { okLabel: 'Short Rest' });
@@ -8048,6 +8296,8 @@ document.getElementById('long-rest-btn').addEventListener('click', () => {
     state.ragesUsed = 0;
     state.rageActive = false;
     state.recklessAttackOn = false;
+    state.pactSlotsUsed = 0;
+    state.magicalCunningUsed = false;
     saveState();
     render();
   }, { okLabel: 'Long Rest' });
