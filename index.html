@@ -1584,6 +1584,10 @@ body.dm-mode .infusion-row input { pointer-events: none; opacity: 0.5; }
   font-family: 'EB Garamond', serif;
   font-size: 0.9rem;
 }
+/* Author display:grid above defeats the user-agent [hidden] { display:none }
+ * rule because specificity matches and author wins. Force-hide when the
+ * element's hidden attribute is set. */
+.combat-status[hidden] { display: none; }
 .combat-status .status-section .status-label {
   font-family: 'Cinzel', serif;
   font-size: 0.7rem;
