@@ -3531,7 +3531,10 @@ body.dm-mode .dm-hide { display: none; }
     <details class="card collapsible-card magic-card" id="magic-card" style="margin-top: 2rem;" hidden open>
       <summary>
       <h3>Spells &amp; Slots
-        <button class="edit-prepared-btn" id="edit-prepared-btn">Edit Prepared</button>
+        <span class="header-actions">
+          <button class="edit-prepared-btn" id="edit-invocations-overlay-btn">Edit Invocations</button>
+          <button class="edit-prepared-btn" id="edit-prepared-btn">Edit Prepared</button>
+        </span>
       </h3>
       </summary>
       <div class="collapsible-body">
@@ -3810,6 +3813,19 @@ body.dm-mode .dm-hide { display: none; }
     <div class="modal-detail-prompts" id="mastery-prompts"></div>
     <div class="modal-actions">
       <button class="modal-confirm" id="mastery-confirm">Save Masteries</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Eldritch Invocations modal — full re-pick respecting prereqs -->
+<div class="modal-overlay" id="invocations-overlay" hidden>
+  <div class="modal">
+    <button class="modal-close" id="invocations-overlay-close" aria-label="Close">×</button>
+    <div class="modal-title">Edit Eldritch Invocations</div>
+    <div class="modal-subtitle" id="invocations-overlay-subtitle">Pick your current Eldritch Invocations.</div>
+    <div class="modal-detail-prompts" id="invocations-overlay-prompts"></div>
+    <div class="modal-actions">
+      <button class="modal-confirm" id="invocations-overlay-confirm">Save Invocations</button>
     </div>
   </div>
 </div>
@@ -6847,9 +6863,62 @@ function renderCombatResources(level) {
 function toggleHitDie(index, max) {
   const used = state.hitDiceUsed || 0;
   const isAvailable = index < (max - used);
-  state.hitDiceUsed = isAvailable ? (max - index) : (max - index - 1);
+  if (isAvailable) {
+    // Spending a Hit Die — prompt for roll + auto-heal
+    promptHitDieSpend(index, max);
+    return;
+  }
+  // Refund a previously-spent Hit Die (no HP undo — manual)
+  state.hitDiceUsed = max - index - 1;
   saveState();
   render();
+}
+
+// Hit Die spend prompt — figures out which class's die corresponds to this pip
+// (history index = pip index since pips are 1:1 with character levels) and opens a
+// styled confirm modal asking for the roll result + showing the resulting heal.
+function promptHitDieSpend(index, max) {
+  const history = state.levelHistory || [];
+  const entry = history[index];
+  const cls = entry && CLASS_DATA[entry.class];
+  const die = cls ? cls.hitDie : 8;
+  const stats = computeStats(state.level);
+  const conMod = mod(stats.con);
+  const avg = Math.ceil((die + 1) / 2); // 4.5→5 for d8, 6.5→7 for d12
+  const className = cls ? cls.name : 'Class';
+  const currentHp = state.hpCurrent == null ? computeHP(state.level, stats) : state.hpCurrent;
+  const maxHp = computeHP(state.level, stats);
+
+  showConfirm(`Spend a Hit Die (${className} d${die})`,
+    `<p>Roll <strong>1d${die}</strong> and add your CON modifier (<strong>${conMod >= 0 ? '+' : ''}${conMod}</strong>) to recover Hit Points.</p>
+     <div style="margin:0.8rem 0;">
+       <label style="font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:0.4rem;">Roll result (1–${die})</label>
+       <input type="number" id="hd-roll-input" value="${avg}" min="1" max="${die}" style="width:5rem;text-align:center;padding:0.3rem;border:1px solid var(--gold-tarnish);background:rgba(42,10,10,0.6);color:var(--parchment);font-family:'Cinzel',serif;font-size:1.1rem;">
+       <span style="margin-left:0.6rem;color:var(--parchment-aged);font-family:'EB Garamond',serif;font-style:italic;">+ CON ${conMod >= 0 ? '+' : ''}${conMod} = <span id="hd-heal-readout" style="color:var(--gold);font-weight:600;">${Math.max(1, avg + conMod)}</span> HP healed</span>
+     </div>
+     <p style="font-size:0.85rem;color:var(--parchment-aged);font-style:italic;">Current HP: ${currentHp} / ${maxHp}. Healing caps at max.</p>`,
+    () => {
+      const roll = parseInt(document.getElementById('hd-roll-input').value, 10) || avg;
+      const heal = Math.max(1, roll + conMod);
+      state.hitDiceUsed = max - index;
+      state.hpCurrent = Math.min(maxHp, currentHp + heal);
+      saveState();
+      render();
+    },
+    { okLabel: `Spend & Heal` });
+  // Live update of heal readout as user types
+  setTimeout(() => {
+    const inp = document.getElementById('hd-roll-input');
+    const readout = document.getElementById('hd-heal-readout');
+    if (inp && readout) {
+      inp.addEventListener('input', () => {
+        const r = Math.max(1, Math.min(die, parseInt(inp.value, 10) || 1));
+        readout.textContent = Math.max(1, r + conMod);
+      });
+      inp.focus();
+      inp.select();
+    }
+  }, 0);
 }
 
 // Pact Magic slot pip click — spend or refund a slot.
@@ -10078,20 +10147,45 @@ document.getElementById('levelup-confirm').addEventListener('click', confirmLeve
 // Edit Prepared modal (Phase 2D)
 // ============================================================
 function openEditPrepared() {
-  const { a } = classBreakdown(state.level);
-  if (a === 0) return;
-  const artData = CLASS_DATA.artificer.perLevel[a];
-  const max = artData.prepared;
-  const maxLvl = maxAccessibleSpellLevel(a);
+  const { w } = classBreakdown(state.level);
+  if (w === 0) return;
+  const wlData = CLASS_DATA.warlock.perLevel[w];
+  const max = wlData.prepared;
+  const maxLvl = maxAccessibleSpellLevel('warlock', state.level);
 
   const overlay = document.getElementById('prepared-overlay');
   const prompts = document.getElementById('prepared-prompts');
   document.getElementById('prepared-subtitle').textContent =
-    `Pick exactly ${max} prepared spell${max > 1 ? 's' : ''} (up to ${ordinalSpellLevel(maxLvl)}). Always-prepared subclass spells don't count.`;
+    `Pick exactly ${max} prepared Warlock spell${max > 1 ? 's' : ''} (up to ${ordinalSpellLevel(maxLvl)}). Subclass-expanded spells (Genie / Efreeti) are eligible. House rule: RAW only allows 1 swap on level-up.`;
 
-  // Build picker pre-checking current preparedSpells
+  // Build picker pre-checking current preparedSpells. Include subclass-expanded spells.
   const current = new Set(state.preparedSpells || []);
-  const eligible = SPELLS.filter(s => s.level !== 'Cantrip' && !s.subclassOnly && spellLevelToNum(s.level) <= maxLvl);
+  const baseSpells = SPELLS.filter(s => s.level !== 'Cantrip' && !s.subclassOnly && spellLevelToNum(s.level) <= maxLvl);
+  const expandedSet = new Set(); // dedup helper for expanded names
+  const expandedFlat = [];
+  const sub = findChosenSubclass('warlock');
+  if (sub) {
+    const subData = CLASS_DATA.warlock.subclassData && CLASS_DATA.warlock.subclassData[sub];
+    if (subData && subData.expandedSpells) {
+      const kind = subData.kind;
+      const buckets = ['generic'].concat(kind ? [kind] : []);
+      for (const bucket of buckets) {
+        const bySpellLevel = subData.expandedSpells[bucket] || {};
+        for (let l = 1; l <= maxLvl; l++) {
+          for (const spell of (bySpellLevel[l] || [])) {
+            if (expandedSet.has(spell.name)) continue;
+            expandedSet.add(spell.name);
+            expandedFlat.push({
+              ...spell,
+              level: ['1st','2nd','3rd','4th','5th','6th','7th','8th','9th'][l - 1],
+              subclassExpanded: bucket === 'generic' ? 'Genie' : kind
+            });
+          }
+        }
+      }
+    }
+  }
+  const eligible = [...baseSpells, ...expandedFlat];
   eligible.sort((a, b) => {
     const da = spellLevelToNum(a.level) - spellLevelToNum(b.level);
     return da !== 0 ? da : a.name.localeCompare(b.name);
@@ -10104,8 +10198,9 @@ function openEditPrepared() {
         ${eligible.map(s => `
           <label class="spell-pick">
             <input type="checkbox" value="${s.name}"${current.has(s.name) ? ' checked' : ''}>
-            <span class="spell-pick-name">${s.name}${s.concentration ? ' <span class="conc-tag">C</span>' : ''}</span>
+            <span class="spell-pick-name">${s.name}${s.concentration ? ' <span class="conc-tag">C</span>' : ''}${s.subclassExpanded ? ' <span class="always-tag">' + s.subclassExpanded + '</span>' : ''}</span>
             <span class="spell-pick-meta">${s.level} · ${s.school}</span>
+            <button type="button" class="picker-info" data-spell="${s.name}" title="Spell details">ⓘ</button>
           </label>
         `).join('')}
       </div>
@@ -10136,6 +10231,15 @@ function openEditPrepared() {
     saveBtn.disabled = checked.length !== max;
   };
   checkboxes.forEach(c => c.addEventListener('change', update));
+  // Wire ⓘ buttons inside the modal — open the spell info modal, don't toggle the checkbox
+  prompts.querySelectorAll('.picker-info').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const s = findSpellByName(btn.dataset.spell);
+      if (s) showSpellInfo(s);
+    });
+  });
   update();
   overlay.hidden = false;
 }
@@ -10157,6 +10261,103 @@ function savePrepared() {
 
 document.getElementById('edit-prepared-btn').addEventListener('click', openEditPrepared);
 document.getElementById('prepared-close').addEventListener('click', closeEditPrepared);
+
+// Edit Eldritch Invocations modal — full re-pick respecting prereqs
+function openEditInvocations() {
+  const { w } = classBreakdown(state.level);
+  if (w === 0) return;
+  const wlData = CLASS_DATA.warlock.perLevel[w];
+  const max = wlData.invocations || 0;
+  if (max === 0) return;
+
+  const overlay = document.getElementById('invocations-overlay');
+  const prompts = document.getElementById('invocations-overlay-prompts');
+  document.getElementById('invocations-overlay-subtitle').textContent =
+    `Pick exactly ${max} Eldritch Invocation${max > 1 ? 's' : ''}. Filtered by minimum Warlock level + prerequisites. House rule: RAW only allows 1 swap on level-up.`;
+
+  // Build picker pre-checking current invocations. Check prereqs using the CURRENT selection set,
+  // so re-checking re-evaluates which invocations are eligible.
+  const current = new Set(state.warlockInvocations || []);
+  const knownCantrips = new Set(state.cantripsKnown || []);
+  const damageCantrips = new Set(['Eldritch Blast', 'Chill Touch', 'Poison Spray', 'Toll the Dead', 'Mind Sliver', 'Thunderclap', 'Acid Splash', 'Fire Bolt', 'Frostbite', 'Ray of Frost', 'Sword Burst', 'Shocking Grasp']);
+  const attackCantrips = new Set(['Eldritch Blast', 'Fire Bolt', 'Ray of Frost', 'Shocking Grasp', 'Acid Splash']);
+  const hasDamageCantrip = [...knownCantrips].some(c => damageCantrips.has(c));
+  const hasAttackCantrip = [...knownCantrips].some(c => attackCantrips.has(c));
+
+  function meetsPrereqs(inv, currentlySelected) {
+    if (inv.minLevel > w) return false;
+    for (const pre of (inv.prereqs || [])) {
+      if (pre.endsWith('Invocation')) {
+        const invName = pre.replace(' Invocation', '');
+        if (!currentlySelected.has(invName)) return false;
+      } else if (pre.includes('Attack Roll')) {
+        if (!hasAttackCantrip) return false;
+      } else if (pre.includes('Cantrip That Deals Damage')) {
+        if (!hasDamageCantrip) return false;
+      }
+    }
+    return true;
+  }
+
+  const eligible = INVOCATIONS.filter(inv => meetsPrereqs(inv, current) || current.has(inv.name));
+  eligible.sort((a, b) => a.name.localeCompare(b.name));
+
+  prompts.innerHTML = `
+    <div class="modal-prompt">
+      <div class="modal-prompt-label">Invocations · ${current.size} / ${max} held</div>
+      <div class="spell-picker" data-pick="invocationsEdit" data-max="${max}">
+        ${eligible.map(inv => `
+          <label class="spell-pick">
+            <input type="checkbox" value="${inv.name}"${current.has(inv.name) ? ' checked' : ''}>
+            <span class="spell-pick-name">${inv.name}${inv.repeatable ? ' <span class="conc-tag">R</span>' : ''}</span>
+            <span class="spell-pick-meta">${inv.prereqs && inv.prereqs.length > 0 ? inv.prereqs.join('; ') + ' · ' : ''}${inv.desc.length > 120 ? inv.desc.slice(0, 120) + '…' : inv.desc}</span>
+          </label>
+        `).join('')}
+      </div>
+      <div class="spell-picker-count" data-count-for="invocationsEdit">${current.size} / ${max}</div>
+    </div>
+  `;
+
+  const picker = prompts.querySelector('.spell-picker');
+  const countEl = prompts.querySelector('[data-count-for="invocationsEdit"]');
+  const checkboxes = Array.from(picker.querySelectorAll('input[type="checkbox"]'));
+  const saveBtn = document.getElementById('invocations-overlay-confirm');
+  const update = () => {
+    const checked = checkboxes.filter(c => c.checked);
+    countEl.textContent = `${checked.length} / ${max}`;
+    countEl.classList.toggle('full', checked.length === max);
+    const reached = checked.length >= max;
+    checkboxes.forEach(c => {
+      const label = c.closest('.spell-pick');
+      if (!c.checked && reached) { c.disabled = true; label.classList.add('disabled'); }
+      else { c.disabled = false; label.classList.remove('disabled'); }
+    });
+    saveBtn.disabled = checked.length !== max;
+  };
+  checkboxes.forEach(c => c.addEventListener('change', update));
+  update();
+  overlay.hidden = false;
+}
+
+function closeEditInvocations() { document.getElementById('invocations-overlay').hidden = true; }
+
+function saveEditInvocations() {
+  const overlay = document.getElementById('invocations-overlay');
+  const picker = overlay.querySelector('.spell-picker');
+  if (!picker) return;
+  const picked = Array.from(picker.querySelectorAll('input:checked')).map(i => i.value);
+  state.warlockInvocations = picked;
+  saveState();
+  closeEditInvocations();
+  render();
+}
+
+document.getElementById('edit-invocations-overlay-btn').addEventListener('click', openEditInvocations);
+document.getElementById('invocations-overlay-close').addEventListener('click', closeEditInvocations);
+document.getElementById('invocations-overlay-confirm').addEventListener('click', saveEditInvocations);
+document.getElementById('invocations-overlay').addEventListener('click', (e) => {
+  if (e.target.id === 'invocations-overlay') closeEditInvocations();
+});
 document.getElementById('prepared-confirm').addEventListener('click', savePrepared);
 document.getElementById('prepared-overlay').addEventListener('click', (e) => {
   if (e.target.id === 'prepared-overlay') closeEditPrepared();
