@@ -586,6 +586,34 @@ body::before {
   font-size: 0.98rem;
   color: var(--parchment);
 }
+.spell-info-body {
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px dotted var(--gold-tarnish);
+  font-family: 'EB Garamond', serif;
+  color: var(--parchment);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+.spell-info-body p { margin: 0 0 0.8rem; }
+.spell-info-body p:last-child { margin-bottom: 0; }
+.spell-info-body .spell-info-upgrade {
+  margin-top: 1rem;
+  padding: 0.6rem 0.8rem;
+  border-left: 2px solid var(--gold);
+  background: rgba(217, 32, 32, 0.06);
+  font-style: italic;
+}
+.spell-info-body .spell-info-upgrade strong {
+  font-family: 'Cinzel', serif;
+  font-style: normal;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  display: inline-block;
+  margin-right: 0.3rem;
+}
 
 /* Phase 2D: spell picker + ASI/feat picker (inside the level-up modal) */
 .modal {
@@ -3767,6 +3795,387 @@ const SPELLS = [
   { name: 'True Polymorph', level: '9th', school: 'Transmutation', time: 'Action', range: '30 feet', components: 'V, S, M', duration: 'C, up to 1 hour', concentration: true },
   { name: 'Weird', level: '9th', school: 'Illusion', time: 'Action', range: '120 feet', components: 'V, S', duration: 'C, up to 1 minute', concentration: true },
 ];
+
+// Full spell descriptions parsed from dnd2024.wikidot.com per-spell pages.
+// Keyed by exact spell name. showSpellInfo merges this with SPELLS metadata.
+const SPELL_DETAILS = {
+  "Blade Ward": {
+    "school": "Abjuration Cantrip (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "Whenever a creature makes an attack roll against you before the spell ends, the attacker subtracts 1d4 from the attack roll."
+  },
+  "Chill Touch": {
+    "school": "Necromancy Cantrip (Sorcerer, Warlock, Wizard)",
+    "desc": "Channeling the chill of the grave, make a melee spell attack against a target within reach. On a hit, the target takes 1d10 Necrotic damage, and it can’t regain Hit Points until the end of your next turn.\n\nCantrip Upgrade. The damage increases by 1d10 when you reach levels 5 (2d10), 11 (3d10), and 17 (4d10)."
+  },
+  "Eldritch Blast": {
+    "school": "Evocation Cantrip (Warlock)",
+    "desc": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage.\n\nCantrip Upgrade. The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam."
+  },
+  "Friends": {
+    "school": "Enchantment Cantrip (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "You magically emanate a sense of friendship toward one creature you can see within range. The target must succeed on a Wisdom saving throw or have the Charmed condition for the duration. The target succeeds automatically if it isn’t a Humanoid, if you’re fighting it, or if you have cast this spell on it within the past 24 hours.\n\nThe spell ends early if the target takes damage or if you make an attack roll, deal damage, or force anyone to make a saving throw. When the spell ends, the target knows it was Charmed by you."
+  },
+  "Mage Hand": {
+    "school": "Conjuration Cantrip (Artificer, Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "A spectral, floating hand appears at a point you choose within range. The hand lasts for the duration. The hand vanishes if it is ever more than 30 feet away from you or if you cast this spell again.\n\nWhen you cast the spell, you can use the hand to manipulate an object, open an unlocked door or container, stow or retrieve an item from an open container, or pour the contents out of a vial.\n\nAs a Magic action on your later turns, you can control the hand thus again. As part of that action, you can move the hand up to 30 feet.\n\nThe hand can’t attack, activate magic items, or carry more than 10 pounds."
+  },
+  "Mind Sliver": {
+    "school": "Enchantment Cantrip (Sorcerer, Warlock, Wizard)",
+    "desc": "You try to temporarily sliver the mind of one creature you can see within range. The target must succeed on an Intelligence saving throw or take 1d6 Psychic damage and subtract 1d4 from the next saving throw it makes before the end of your next turn.\n\nCantrip Upgrade. The damage increases by 1d6 when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6)."
+  },
+  "Minor Illusion": {
+    "school": "Illusion Cantrip (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "You create a sound or an image of an object within range that lasts for the duration. See the descriptions below for the effects of each. The illusion ends if you cast this spell again.\n\nIf a creature takes a Study action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature.\n\nSound. If you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else’s voice, a lion’s roar, a beating of drums, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends.\n\nImage. If you create an image of an object—such as a chair, muddy footprints, or a small chest—it must be no larger than a 5-foot Cube. The image can’t create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, since things can pass through it."
+  },
+  "Poison Spray": {
+    "school": "Necromancy Cantrip (Artificer, Druid, Sorcerer, Warlock, Wizard)",
+    "desc": "You spray toxic mist at a creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d12 Poison damage.\n\nCantrip Upgrade. The damage increases by 1d12 when you reach levels 5 (2d12), 11 (3d12), and 17 (4d12)."
+  },
+  "Prestidigitation": {
+    "school": "Transmutation Cantrip (Artificer, Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "You create a magical effect within range. Choose the effect from the options below. If you cast this spell multiple times, you can have up to three of its non-instantaneous effects active at a time.\n\nSensory Effect. You create an instantaneous, harmless sensory effect, such as a shower of sparks, a puff of wind, faint musical notes, or an odd odor.\n\nFire Play. You instantaneously light or snuff out a candle, a torch, or a small campfire.\n\nClean or Soil. You instantaneously clean or soil an object no larger than 1 cubic foot.\n\nMinor Sensation. You chill, warm, or flavor up to 1 cubic foot of nonliving material for 1 hour.\n\nMagic Mark. You make a color, a small mark, or a symbol appear on an object or a surface for 1 hour.\n\nMinor Creation. You create a nonmagical trinket or an illusory image that can fit in your hand. It lasts until the end of your next turn. A trinket can deal no damage and has no monetary worth."
+  },
+  "Thunderclap": {
+    "school": "Evocation Cantrip (Artificer, Bard, Druid, Sorcerer, Warlock, Wizard)",
+    "desc": "Each creature in a 5-foot Emanation originating from you must succeed on a Constitution saving throw or take 1d6 Thunder damage. The spell’s thunderous sound can be heard up to 100 feet away.\n\nCantrip Upgrade. The damage increases by 1d6 when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6)."
+  },
+  "Toll the Dead": {
+    "school": "Necromancy Cantrip (Cleric, Warlock, Wizard)",
+    "desc": "You point at one creature you can see within range, and the single chime of a dolorous bell is audible within 10 feet of the target. The target must succeed on a Wisdom saving throw or take 1d8 Necrotic damage. If the target is missing any of its Hit Points, it instead takes 1d12 Necrotic damage.\n\nCantrip Upgrade. The damage increases by one die when you reach levels 5 (2d8 or 2d12), 11 (3d8 or 3d12), and 17 (4d8 or 4d12)."
+  },
+  "True Strike": {
+    "school": "Divination Cantrip (Artificer, Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "Guided by a flash of magical insight, you make one attack with the weapon used in the spell’s casting. The attack uses your spellcasting ability for the attack and damage rolls instead of using Strength or Dexterity. If the attack deals damage, it can be Radiant damage or the weapon’s normal damage type (your choice).\n\nCantrip Upgrade. Whether you deal Radiant damage or the weapon’s normal damage type, the attack deals extra Radiant damage when you reach levels 5 (1d6), 11 (2d6), and 17 (3d6)."
+  },
+  "Armor of Agathys": {
+    "school": "Level 1 Abjuration (Warlock)",
+    "desc": "Protective magical frost surrounds you. You gain 5 Temporary Hit Points. If a creature hits you with a melee attack roll before the spell ends, the creature takes 5 Cold damage. The spell ends early if you have no Temporary Hit Points.\n\nUsing a Higher-Level Spell Slot. The Temporary Hit Points and the Cold damage both increase by 5 for each spell slot level above 1."
+  },
+  "Arms of Hadar": {
+    "school": "Level 1 Conjuration (Warlock)",
+    "desc": "Invoking Hadar, you cause tendrils to erupt from yourself. Each creature in a 10-foot Emanation originating from you makes a Strength saving throw. On a failed save, a target takes 2d6 Necrotic damage and can’t take Reactions until the start of its next turn. On a successful save, a target takes half as much damage only.\n\nUsing a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 1."
+  },
+  "Bane": {
+    "school": "Level 1 Enchantment (Bard, Cleric, Warlock)",
+    "desc": "Up to three creatures of your choice that you can see within range must each make a Charisma saving throw. Whenever a target that fails this save makes an attack roll or a saving throw before the spell ends, the target must subtract 1d4 from the attack roll or save.\n\nUsing a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 1."
+  },
+  "Charm Person": {
+    "school": "Level 1 Enchantment (Bard, Druid, Sorcerer, Warlock, Wizard)",
+    "desc": "One Humanoid you can see within range makes a Wisdom saving throw. It does so with Advantage if you or your allies are fighting it. On a failed save, the target has the Charmed condition until the spell ends or until you or your allies damage it. The Charmed creature is Friendly to you. When the spell ends, the target knows it was Charmed by you.\n\nUsing a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 1."
+  },
+  "Comprehend Languages": {
+    "school": "Level 1 Divination (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "For the duration, you understand the literal meaning of any language that you hear or see signed. You also understand any written language that you see, but you must be touching the surface on which the words are written. It takes about 1 minute to read one page of text. This spell doesn't decode symbols or secret messages."
+  },
+  "Detect Magic": {
+    "school": "Level 1 Divination (Artificer, Bard, Cleric, Druid, Paladin, Ranger, Sorcerer, Warlock, Wizard)",
+    "desc": "For the duration, you sense the presence of magical effects within 30 feet of yourself. If you sense such effects, you can take the Magic action to see a faint aura around any visible creature or object in the area that bears the magic, and if an effect was created by a spell, you learn the spell's school of magic.\n\nThe spell is blocked by 1 foot of stone, dirt, or wood; 1 inch of metal; or a thin sheet of lead."
+  },
+  "Expeditious Retreat": {
+    "school": "Level 1 Transmutation (Artificer, Sorcerer, Warlock, Wizard)",
+    "desc": "You take the Dash action, and until the spell ends, you can take that action again as a Bonus Action."
+  },
+  "Hellish Rebuke": {
+    "school": "Level 1 Evocation (Warlock)",
+    "desc": "The creature that damaged you is momentarily surrounded by green flames. It makes a Dexterity saving throw, taking 2d10 Fire damage on a failed save or half as much damage on a successful one.\n\nUsing a Higher-Level Spell Slot. The damage increases by 1d10 for each spell slot level above 1."
+  },
+  "Hex": {
+    "school": "Level 1 Enchantment (Warlock)",
+    "desc": "You place a curse on a creature that you can see within range. Until the spell ends, you deal an extra 1d6 Necrotic damage to the target whenever you hit it with an attack roll. Also, choose one ability when you cast the spell. The target has Disadvantage on ability checks made with the chosen ability.\n\nIf the target drops to 0 Hit Points before this spell ends, you can take a Bonus Action on a later turn to curse a new creature.\n\nUsing a Higher-Level Spell Slot. Your Concentration can last longer with a spell slot of level 2 (up to 4 hours), 3–4 (up to 8 hours), or 5+ (24 hours)."
+  },
+  "Illusory Script": {
+    "school": "Level 1 Illusion (Bard, Warlock, Wizard)",
+    "desc": "You write on parchment, paper, or another suitable material and imbue it with an illusion that lasts for the duration. To you and any creatures you designate when you cast the spell, the writing appears normal, seems to be written in your hand, and conveys whatever meaning you intended when you wrote the text. To all others, the writing appears as if it were written in an unknown or magical script that is unintelligible. Alternatively, the illusion can alter the meaning, handwriting, and language of the text, though the language must be one you know.\n\nIf the spell is dispelled, the original script and the illusion both disappear.\n\nA creature that has Truesight can read the hidden message."
+  },
+  "Protection from Evil and Good": {
+    "school": "Level 1 Abjuration (Cleric, Druid, Paladin, Warlock, Wizard)",
+    "desc": "Until the spell ends, one willing creature you touch is protected against creatures that are Aberrations, Celestials, Elementals, Fey, Fiends, or Undead. The protection grants several benefits. Creatures of those types have Disadvantage on attack rolls against the target. The target also can’t be possessed by or gain the Charmed or Frightened conditions from them. If the target is already possessed, Charmed, or Frightened by such a creature, the target has Advantage on any new saving throw against the relevant effect."
+  },
+  "Speak with Animals": {
+    "school": "Level 1 Divination (Bard, Druid, Ranger, Warlock)",
+    "desc": "For the duration, you can comprehend and verbally communicate with Beasts, and you can use any of the Influence action’s skill options with them.\n\nMost Beasts have little to say about topics that don’t pertain to survival or companionship, but at minimum, a Beast can give you information about nearby locations and monsters, including whatever it has perceived within the past day."
+  },
+  "Tasha's Hideous Laughter": {
+    "school": "Level 1 Enchantment (Bard, Warlock, Wizard)",
+    "desc": "One creature of your choice that you can see within range makes a Wisdom saving throw. On a failed save, it has the Prone and Incapacitated conditions for the duration. During that time, it laughs uncontrollably if it’s capable of laughter, and it can’t end the Prone condition on itself.\n\nAt the end of each of its turns and each time it takes damage, it makes another Wisdom saving throw. The target has Advantage on the save if the save is triggered by damage. On a successful save, the spell ends.\n\nUsing a Higher-Level Spell Slot. You can target one additional creature for each spell slot level about 1."
+  },
+  "Unseen Servant": {
+    "school": "Level 1 Conjuration (Bard, Warlock, Wizard)",
+    "desc": "This spell creates an Invisible, mindless, shapeless, Medium force that performs simple tasks at your command until the spell ends. The servant springs into existence in an unoccupied space on the ground within range. It has AC 10, 1 Hit Point, and a Strength of 2, and it can’t attack. If it drops to 0 Hit Points, the spell ends.\n\nOnce on each of your turns as a Bonus Action, you can mentally command the servant to move up to 15 feet and interact with an object. The servant can perform simple tasks that a human could do, such as fetching things, cleaning, mending, folding clothes, lighting fires, serving food, and pouring drinks. Once you give the command, the servant performs the task to the best of its ability until it completes the task, then waits for your next command.\n\nIf you command the servant to perform a task that would move it more than 60 feet away from you, the spell ends."
+  },
+  "Witch Bolt": {
+    "school": "Level 1 Evocation (Sorcerer, Warlock, Wizard)",
+    "desc": "A beam of crackling energy lances toward a creature within range, forming a sustained arc of lightning between you and the target. Make a ranged spell attack against it. On a hit, the target takes 2d12 Lightning damage.\n\nOn each of your subsequent turns, you can take a Bonus Action to deal 1d12 Lightning damage to the target automatically, even if the first attack missed.\n\nThe spell ends if the target is ever outside the spell’s range or if it has Total Cover from you.\n\nUsing a Higher-Level Spell Slot. The initial damage increases by 1d12 for each spell slot level above 1."
+  },
+  "Cloud Of Daggers": {
+    "school": "Level 2 Conjuration (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "You conjure spinning daggers in a 5-foot Cube centered on a point within range. Each creature in that area takes 4d4 Slashing damage. A creature also takes this damage if it enters the Cube or ends its turn there or if the Cube moves into its space. A creature takes this damage only once per turn.\n\nOn your later turns, you can take a Magic action to teleport the Cube up to 30 feet.\n\nUsing a Higher-Level Spell Slot. The damage increases by 2d4 for each spell slot level above 2."
+  },
+  "Crown Of Madness": {
+    "school": "Level 2 Enchantment (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "One creature that you can see within range must succeed on a Wisdom saving throw or have the Charmed condition for the duration. The creature succeeds automatically if it isn’t Humanoid.\n\nA spectral crown appears on the Charmed target's head, and it must use its action before moving on each of its turns to make a melee attack against a creature other than itself that you mentally choose. The target can act normally on its turn if you choose no creature or if no creature is within its reach. The target repeats the save at the end of each of its turns, ending the spell on itself on a success.\n\nOn your later turns, you must take the Magic action to maintain control of the target, or the spell ends."
+  },
+  "Darkness": {
+    "school": "Level 2 Evocation (Sorcerer, Warlock, Wizard)",
+    "desc": "For the duration, magical Darkness spreads from a point within range and fills a 15-foot-radius Sphere. Darkvision can’t see through it, and nonmagical light can’t illuminate it.\n\nAlternatively, you cast the spell on an object that isn’t being worn or carried, causing the Darkness to fill a 15-foot Emanation originating from that object. Covering that object with something opaque, such as a bowl or helm, blocks the Darkness.\n\nIf any of this spell’s area overlaps with an area of Bright Light or Dim Light created by a spell of level 2 or lower, that other spell is dispelled."
+  },
+  "Enthrall": {
+    "school": "Level 2 Enchantment (Bard, Warlock)",
+    "desc": "You weave a distracting string of words, causing creatures of your choice that you can see within range to make a Wisdom saving throw. Any creature you or your companions are fighting automatically succeeds on this save. On a failed save, a target has a −10 penalty to Wisdom (Perception) checks and Passive Perception until the spell ends."
+  },
+  "Hold Person": {
+    "school": "Level 2 Enchantment (Bard, Cleric, Druid, Sorcerer, Warlock, Wizard)",
+    "desc": "Choose a Humanoid that you can see within range. The target must succeed on a Wisdom saving throw or have the Paralyzed condition for the duration. At the end of each of its turns, the target repeats the save, ending the spell on itself on a success.\n\nUsing a Higher-Level Spell Slot. You can target one additional Humanoid for each spell slot level above 2."
+  },
+  "Invisibility": {
+    "school": "Level 2 Illusion (Artificer, Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "A creature you touch has the Invisible condition until the spell ends. The spell ends early immediately after the target makes an attack roll, deals damage, or casts a spell.\n\nUsing a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 2."
+  },
+  "Mind Spike": {
+    "school": "Level 2 Divination (Sorcerer, Warlock, Wizard)",
+    "desc": "You drive a spike of psionic energy into the mind of one creature you can see within range. The target makes a Wisdom saving throw, taking 3d8 Psychic damage on a failed save or half as much damage on a successful one. On a failed save, you also always know the target’s location until the spell ends, but only while the two of you are on the same plane of existence. While you have this knowledge, the target can’t become hidden from you, and if it has the Invisible condition, it gains no benefit from that condition against you.\n\nUsing a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 2."
+  },
+  "Mirror Image": {
+    "school": "Level 2 Illusion (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "Three illusory duplicates of yourself appear in your space. Until the spell ends, the duplicates move with you and mimic your actions, shifting position so it’s impossible to track which image is real.\n\nEach time a creature hits you with an attack roll during the spell’s duration, roll a d6 for each of your remaining duplicates. If any of the d6s rolls a 3 or higher, one of the duplicates is hit instead of you, and the duplicate is destroyed. The duplicates otherwise ignore all other damage and effects. The spell ends when all three duplicates are destroyed.\n\nA creature is unaffected by this spell if it has the Blinded condition, Blindsight, or Truesight."
+  },
+  "Misty Step": {
+    "school": "Level 2 Conjuration (Sorcerer, Warlock, Wizard)",
+    "desc": "Briefly surrounded by silvery mist, you teleport up to 30 feet to an unoccupied space you can see."
+  },
+  "Ray of Enfeeblement": {
+    "school": "Level 2 Necromancy (Warlock, Wizard)",
+    "desc": "A beam of enervating energy shoots from you toward a creature within range. The target must make a Constitution saving throw. On a successful save, the target has Disadvantage on the next attack roll it makes until the start of your next turn.\n\nOn a failed save, the target has Disadvantage on Strength-based D20 Tests for the duration. During that time, it also subtracts 1d8 from all its damage rolls. The target repeats the save at the end of each of its turns, ending the spell on a success."
+  },
+  "Spider Climb": {
+    "school": "Level 2 Transmutation (Artificer, Sorcerer, Warlock, Wizard)",
+    "desc": "Until the spell ends, one willing creature you touch gains the ability to move up, down, and across vertical surfaces and along ceilings, while leaving its hands free. The target also gains a Climb Speed equal to its Speed.\n\nUsing a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 2."
+  },
+  "Suggestion": {
+    "school": "Level 2 Enchantment (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "You suggest a course of activity—described in no more than 25 words—to one creature you can see within range that can hear and understand you. The suggestion must sound achievable and not involve anything that would obviously deal damage to the target or its allies. For example, you could say, “Fetch the key to the cult’s treasure vault, and give the key to me.” Or you could say, “Stop fighting, leave this library peacefully, and don’t return.”\n\nThe target must succeed on a Wisdom saving throw or have the Charmed condition for the duration or until you or your allies deal damage to the target. The Charmed target pursues the suggestion to the best of its ability. The suggested activity can continue for the entire duration, but if the suggested activity can be completed in a shorter time, the spell ends for the target upon completing it."
+  },
+  "Counterspell": {
+    "school": "Level 3 Abjuration (Sorcerer, Warlock, Wizard)",
+    "desc": "You attempt to interrupt a creature in the process of casting a spell. The creature makes a Constitution saving throw. On a failed save, the spell dissipates with no effect, and the action, Bonus Action, or Reaction used to cast it is wasted. If that spell was cast with a spell slot, the slot isn’t expended."
+  },
+  "Dispel Magic": {
+    "school": "Level 3 Abjuration (Artificer, Bard, Cleric, Druid, Paladin, Ranger, Sorcerer, Warlock, Wizard)",
+    "desc": "Choose one creature, object, or magical effect within range. Any ongoing spell of level 3 or lower on the target ends. For each ongoing spell of level 4 or higher on the target, make an ability check using your spellcasting ability (DC 10 plus that spell’s level). On a successful check, the spell ends.\n\nUsing a Higher-Level Spell Slot. You automatically end a spell on the target if the spell’s level is equal to or less than the level of the spell slot you use."
+  },
+  "Fear": {
+    "school": "Level 3 Illusion (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "Each creature in a 30-foot Cone must succeed on a Wisdom saving throw or drop whatever it is holding and have the Frightened condition for the duration.\n\nA Frightened creature takes the Dash action and moves away from you by the safest route on each of its turns unless there is nowhere to move. If the creature ends its turn in a space where it doesn’t have line of sight to you, the creature makes a Wisdom saving throw. On a successful save, the spell ends on that creature."
+  },
+  "Fly": {
+    "school": "Level 3 Transmutation (Artificer, Sorcerer, Warlock, Wizard)",
+    "desc": "You touch a willing creature. For the duration, the target gains a Fly Speed of 60 feet and can hover. When the spell ends, the target falls if it is still aloft unless it can stop the fall.\n\nUsing a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 3."
+  },
+  "Gaseous Form": {
+    "school": "Level 3 Transmutation (Sorcerer, Warlock, Wizard)",
+    "desc": "A willing creature you touch shape-shifts, along with everything it’s wearing and carrying, into a misty cloud for the duration. The spell ends on the target if it drops to 0 Hit Points or if it takes a Magic action to end the spell on itself.\n\nWhile in this form, the target’s only method of movement is a Fly Speed of 10 feet, and it can hover. The target can enter and occupy the space of another creature. The target has Resistance to Bludgeoning, Piercing, and Slashing damage; it has Immunity to the Prone condition; and it has Advantage on Strength, Dexterity, and Constitution saving throws. The target can pass through narrow openings, but it treats liquids as though they were solid surfaces.\n\nThe target can’t talk or manipulate objects, and any objects it was carrying or holding can’t be dropped, used, or otherwise interacted with. Finally, the target can’t attack or cast spells.\n\nUsing a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 3."
+  },
+  "Hunger of Hadar": {
+    "school": "Level 3 Conjuration (Warlock)",
+    "desc": "You open a gateway to the Far Realm, a region infested with unspeakable horrors. A 20-foot-radius Sphere of Darkness appears, centered on a point with range and lasting for the duration. The Sphere is Difficult Terrain, and it is filled with strange whispers and slurping noises, which can be heard up to 30 feet away. No light, magical or otherwise, can illuminate the area, and creatures fully within it have the Blinded condition.\n\nAny creature that starts its turn in the area takes 2d6 Cold damage. Any creature that ends its turn there must succeed on a Dexterity saving throw or take 2d6 Acid damage from otherworldly tentacles.\n\nUsing a Higher-Level Spell Slot. The Cold or Acid damage (your choice) increases by 1d6 for each spell slot level above 3."
+  },
+  "Hypnotic Pattern": {
+    "school": "Level 3 Illusion (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "You create a twisting pattern of colors in a 30-foot Cube within range. The pattern appears for a moment and vanishes. Each creature in the area who can see the pattern must succeed on a Wisdom saving throw or have the Charmed condition for the duration. While Charmed, the creature has the Incapacitated condition and a Speed of 0.\n\nThe spell ends for an affected creature if it takes any damage or if someone else uses an action to shake the creature out of its stupor."
+  },
+  "Magic Circle": {
+    "school": "Level 3 Abjuration (Cleric, Paladin, Warlock, Wizard)",
+    "desc": "You create a 10-foot-radius, 20-foot-tall Cylinder of magical energy centered on a point on the ground that you can see within range. Glowing runes appear wherever the Cylinder intersects with the floor or other surface.\n\nChoose one or more of the following types of creatures: Celestials, Elementals, Fey, Fiends, or Undead. The circle affects a creature of the chosen type in the following ways:\n\nThe creature can’t willingly enter the Cylinder by nonmagical means. If the creature tries to use teleportation or interplanar travel to do so, it must first succeed on a Charisma saving throw.\nThe creature has Disadvantage on attack rolls against targets within the Cylinder.\nTargets within the Cylinder can’t be possessed by or gain the Charmed or Frightened condition from the creature.\n\nEach time you cast this spell, you can cause its magic to operate in the reverse direction, preventing a creature of the specified type from leaving the Cylinder and protecting targets outside it.\n\nUsing a Higher-Level Spell Slot. The duration increases by 1 hour for each spell slot level above 3."
+  },
+  "Major Image": {
+    "school": "Level 3 Illusion (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "You create the image of an object, a creature, or some other visible phenomenon that is no larger than a 20-foot Cube. The image appears at a spot that you can see within range and lasts for the duration. It seems real, including sounds, smells, and temperature appropriate to the thing depicted, but it can’t deal damage or cause conditions.\n\nIf you are within range of the illusion, you can take a Magic action to cause the image to move to any other spot within range. As the image changes location, you can alter its appearance so that its movements appear natural for the image. For example, if you create an image of a creature and move it, you can alter the image so that it appears to be walking. Similarly, you can cause the illusion to make different sounds at different times, even making it carry on a conversation, for example.\n\nPhysical interaction with the image reveals it to be an illusion, for things can pass through it. A creature that takes a Study action to examine the image can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC. If a creature discerns the illusion for what it is, the creature can see through the image, and its other sensory qualities become faint to the creature.\n\nUsing a Higher-Level Spell Slot. The spell lasts until dispelled, without requiring Concentration, if cast with a level 4+ spell slot."
+  },
+  "Remove Curse": {
+    "school": "Level 3 Abjuration (Cleric, Paladin, Warlock, Wizard)",
+    "desc": "At your touch, all curses affecting one creature or object end. If the object is a cursed magic item, its curse remains, but the spell breaks its owner’s Attunement to the object so it can be removed or discarded."
+  },
+  "Summon Fey": {
+    "school": "Level 3 Conjuration (Druid, Ranger, Warlock, Wizard)",
+    "desc": "You call forth a Fey spirit. It manifests in an unoccupied space that you can see within range and uses the Fey Spirit stat block. When you cast the spell, choose a mood: Fuming, Mirthful, or Tricksy. The creature resembles a Fey creature of your choice marked by the chosen mood, which determines certain details in its stat block. The creature disappears when it drops to 0 Hit Points or when the spell ends.\n\nThe creature is an ally to you and your allies. In combat, the creature shares your Initiative count, but it takes its turn immediately after yours. It obeys your verbal commands (no action required by you). If you don’t issue any, it takes the Dodge action and uses its movement to avoid danger.\n\nUsing a Higher-Level Spell Slot. Use the spell slot’s level for the spell’s level in the stat block.\n\nFey Spirit\n\n\nSmall Fey, Neutral\n\n\nArmor Class: 12 + the spell’s level\n\n\nHit Points: 30 + 10 for each spell level above 3\n\n\nSpeed: 30 ft., Fly 30 ft.\n\n\nSTR (Mod/Save)\nDEX (Mod/Save)\nCON (Mod/Save)\nINT (Mod/Save)\nWIS (Mod/Save)\nCHA (Mod/Save)\n\n\n13 (+1/+1)\n16 (+3/+3)\n14 (+2/+2)\n14 (+2/+2)\n11 (+0/+0)\n16 (+3/+3)\n\n\nImmunities: Charmed\n\n\nSenses: Darkvision 60 ft., Passive Perception 10\n\n\nLanguages: Sylvan, understands the languages you know\n\n\nChallenge Rating: None (XP 0; PB equals your Proficiency Bonus)\n\n\nActions\n\n\nMultiattack. The spirit makes a number of Fey Blade attacks equal to half this spell’s level (round down).\n\n\nFey Blade. Melee Attack Roll: Bonus equals your spell attack modifier, reach 5 ft. Hit: 2d6 + 3 + the spell’s level Force damage.\n\n\nBonus Actions\n\n\nFey Step. The spirit magically teleports up to 30 feet to an unoccupied space it can see. Then one of the following effects occurs, based on the spirit’s chosen mood:\n\n\nFuming. The spirit has Advantage on the next attack roll it makes before the end of this turn.\n\n\nMirthful. Wisdom Saving Throw: DC equals your spell save DC, one creature the spirit can see within 10 feet of itself. Failure: The target is Charmed by you and the spirit for 1 minute or until the target takes any damage.\n\n\nTricksy. The spirit fills a 10-foot Cube within 5 feet of it with magical Darkness, which lasts until the end of its next turn."
+  },
+  "Summon Undead": {
+    "school": "Level 3 Necromancy (Warlock, Wizard)",
+    "desc": "You call forth an Undead spirit. It manifests in an unoccupied space that you can see within range and uses the Undead Spirit stat block. When you cast the spell, choose the creature’s form: Ghostly, Putrid, or Skeletal. The spirit resembles an Undead creature with the chosen form, which determines certain details in its stat block. The creature disappears when it drops to 0 Hit Points or when the spell ends.\n\nThe creature is an ally to you and your allies. In combat, the creature shares your Initiative count, but it takes its turn immediately after yours. It obeys your verbal commands (no action required by you). If you don’t issue any, it takes the Dodge action and uses its movement to avoid danger.\n\nUsing a Higher-Level Spell Slot. Use the spell slot’s level for the spell’s level in the stat block.\n\nUndead Spirit\n\n\nMedium Undead, Neutral\n\n\nArmor Class: 11 + the spell’s level\n\n\nHit Points: 30 (Ghostly and Putrid only) or 20 (Skeletal only) + 10 for each spell level above 3\n\n\nSpeed: 30 ft.; Fly 40 ft. (hover; Ghostly only)\n\n\nSTR (Mod/Save)\nDEX (Mod/Save)\nCON (Mod/Save)\nINT (Mod/Save)\nWIS (Mod/Save)\nCHA (Mod/Save)\n\n\n12 (+1/+1)\n16 (+3/+3)\n15 (+2/+2)\n4 (-3/-3)\n10 (+0/+0)\n9 (-1/-1)\n\n\nImmunities: Immunities Necrotic, Poison; Exhaustion, Frightened, Paralyzed, Poisoned\n\n\nSenses: Darkvision 60 ft., Passive Perception 10\n\n\nLanguages: Understands the languages you know\n\n\nChallenge Rating: None (XP 0; PB equals your Proficiency Bonus)\n\n\nTraits\n\n\nFestering Aura (Putrid Only). Constitution Saving Throw: DC equals your spell save DC, any creature (other than you) that starts its turn within a 5-foot Emanation originating from the spirit. Failure: The creature has the Poisoned condition until the start of its next turn.\n\n\nIncorporeal Passage (Ghostly Only). The spirit can move through other creatures and objects as if they were Difficult Terrain. If it ends its turn inside an object, it is shunted to the nearest unoccupied space and takes 1d10 Force damage for every 5 feet traveled.\n\n\nActions\n\n\nMultiattack. The spirit makes a number of attacks equal to half this spell’s level (round down).\n\n\nDeathly Touch (Ghostly Only). Melee Attack Roll: Bonus equals your spell attack modifier, reach 5 ft. Hit: 1d8 + 3 + the spell’s level Necrotic damage, and the target has the Frightened condition until the end of its next turn.\n\n\nGrave Bolt (Skeletal Only). Ranged Attack Roll: Bonus equals your spell attack modifier, range 150 ft. Hit: 2d4 + 3 + the spell’s level Necrotic damage.\n\n\nRotting Claw (Putrid Only). Melee Attack Roll: Bonus equals your spell attack modifier, reach 5 ft. Hit: 1d6 + 3 + the spell’s level Slashing damage. If the target has the Poisoned condition, it has the Paralyzed condition until the end of its next turn."
+  },
+  "Tongues": {
+    "school": "Level 3 Divination (Bard, Cleric, Sorcerer, Warlock, Wizard)",
+    "desc": "This spell grants the creature you touch the ability to understand any spoken or signed language that it hears or sees. Moreover, when the target communicates by speaking or signing, any creature that knows at least one language can understand it if that creature can hear the speech or see the signing."
+  },
+  "Vampiric Touch": {
+    "school": "Level 3 Necromancy (Sorcerer, Warlock, Wizard)",
+    "desc": "The touch of your shadow-wreathed hand can siphon life force from others to heal your wounds. Make a melee spell attack against one creature within reach. On a hit, the target takes 3d6 Necrotic damage, and you regain Hit Points equal to half the amount of Necrotic damage dealt.\n\nUntil the spell ends, you can make the attack again on each of your turns as a Magic action, targeting the same creature or a different one.\n\nUsing a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 3."
+  },
+  "Backlash": {
+    "school": "Level 4 Abjuration (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "You ward yourself against destructive energy, reducing the damage taken by 4d6 plus your spellcasting ability modifier.\n\nIf the triggering damage was from a creature within range, you can force the creature to make a Constitution saving throw. The creature takes 4d6 Force damage on a failed save or half as much damage on a successful one.\n\nUsing a Higher-Level Spell Slot. The damage reduction and Force damage from this spell both increase by 1d6 for every spell slot level above 4."
+  },
+  "Banishment": {
+    "school": "Level 4 Abjuration (Cleric, Paladin, Sorcerer, Warlock, Wizard)",
+    "desc": "One creature that you can see within range must succeed on a Charisma saving throw or be transported to a harmless demiplane for the duration. While there, the target has the Incapacitated condition. When the spell ends, the target reappears in the space it left or in the nearest unoccupied space if that space is occupied.\n\nIf the target is an Aberration, a Celestial, an Elemental, a Fey, or a Fiend, the target doesn't return if the spell lasts for 1 minute. The target is instead transported to a random location on a plane (DM’s choice) associated with its creature type.\n\nUsing a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 4."
+  },
+  "Blight": {
+    "school": "Level 4 Necromancy (Druid, Sorcerer, Warlock, Wizard)",
+    "desc": "A creature that you can see within range makes a Constitution saving throw, taking 8d8 Necrotic damage on a failed save or half as much damage on a successful one. A Plant creature automatically fails the save.\n\nAlternatively, target a nonmagical plant that isn’t a creature, such as a tree or shrub. It doesn’t make a save; it simply withers and dies.\n\nUsing a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 4."
+  },
+  "Charm Monster": {
+    "school": "Level 4 Enchantment (Bard, Druid, Sorcerer, Warlock, Wizard)",
+    "desc": "One creature you can see within range makes a Wisdom saving throw. It does so with Advantage if you or your allies are fighting it. On a failed save, the target has the Charmed condition until the spell ends or until you or your allies damage it. The Charmed creature is Friendly to you. When the spell ends, the target knows it was Charmed by you.\n\nUsing a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 4."
+  },
+  "Dimension Door": {
+    "school": "Level 4 Conjuration (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "You teleport to a location within range. You arrive at exactly the spot desired. It can be a place you can see, one you can visualize, or one you can describe by stating distance and direction, such as “200 feet straight downward” or “300 feet upward to the northwest at a 45-degree angle.”\n\nYou can also teleport one willing creature. The creature must be within 5 feet of you when you teleport, and it teleports to a space within 5 feet of your destination space.\n\nIf you, the other creature, or both would arrive in a space occupied by a creature or completely filled by one or more objects, you and any creature traveling with you each take 4d6 Force damage, and the teleportation fails."
+  },
+  "Doomtide": {
+    "school": "Level 4 Conjuration (Bard, Cleric, Warlock)",
+    "desc": "You create a 20-foot-radius Sphere of inky fog within range. The fog is magical Darkness and lasts for the duration or until a strong wind (such as the one created by the Gust of Wind spell) disperses it, ending the spell.\n\nEach creature in the Sphere when it appears makes a Wisdom saving throw. On a failed save, a creature takes 5d6 Psychic damage and subtracts 1d6 from its saving throws until the end of its next turn. On a successful save, a creature takes half as much damage only. A creature also makes this save when the Sphere moves into its space, when it enters the Sphere, or when it ends its turn inside the Sphere. A creature makes this save only once per turn.\n\nThe Sphere moves 10 feet away from you at the start of each of your turns.\n\nCasting as a Circle Spell. Casting this as a Circle spell requires a minimum of five secondary casters. In addition to the spell’s usual components, you must provide a special component (a string of three black pearls from Pandemonium), which the spell consumes. The spell’s range increases to 1 mile, and its duration increases to until dispelled (no Concentration required). The spell ends early if any caster who participated in this casting contributes to another casting of Doomtide as a Circle spell.\n\nWhen the spell is cast, each secondary caster must expend a level 3+ spell slot; otherwise, the spell fails."
+  },
+  "Hallucinatory Terrain": {
+    "school": "Level 4 Illusion (Bard, Druid, Warlock, Wizard)",
+    "desc": "You make natural terrain in a 150-foot Cube in range look, sound, and smell like another sort of natural terrain. Thus, open fields or a road can be made to resemble a swamp, hill, crevasse, or some other difficult or impassable terrain. A pond can be made to seem like a grassy meadow, a precipice like a gentle slope, or a rock-strewn gully like a wide and smooth road. Manufactured structures, equipment, and creatures within the area aren’t changed.\n\nThe tactile characteristics of the terrain are unchanged, so creatures entering the area are likely to notice the illusion. If the difference isn’t obvious by touch, a creature examining the illusion can take the Study action to make an Intelligence (Investigation) check against your spell save DC to disbelieve it. If a creature discerns that the terrain is illusory, the creature sees a vague image superimposed on the real terrain."
+  },
+  "Summon Aberration": {
+    "school": "Level 4 Conjuration (Warlock, Wizard)",
+    "desc": "You call forth an aberrant spirit. It manifests in an unoccupied space that you can see within range and uses the Aberrant Spirit stat block. When you cast the spell, choose Beholderkin, Mind Flayer, or Slaad. The creature resembles an Aberration of that kind, which determines certain details in its stat block. The creature disappears when it drops to 0 Hit Points or when the spell ends.\n\nThe creature is an ally to you and your allies. In combat, it shares your Initiative count, but it takes its turn immediately after yours. It obeys your verbal commands (no action required by you). If you don’t issue any, it takes the Dodge action and uses its movement to avoid danger.\n\nUsing a Higher-Level Spell Slot. Use the spell slot’s level for the spell’s level in the stat block.\n\nAberrant Spirit\n\n\nMedium Aberration, Neutral\n\n\nArmor Class: 11 + the spell’s level\n\n\nHit Points: 40 + 10 for each spell level above 4\n\n\nSpeed: 30 ft.; Fly 30 ft. (hover; Beholderkin only)\n\n\nSTR (Mod/Save)\nDEX (Mod/Save)\nCON (Mod/Save)\nINT (Mod/Save)\nWIS (Mod/Save)\nCHA (Mod/Save)\n\n\n16 (+3/+3)\n10 (+0/+0)\n15 (+2/+2)\n16 (+3/+3)\n10 (+0/+0)\n6 (-2/-2)\n\n\nImmunities Psychic\n\n\nSenses: Darkvision 60 ft., Passive Perception 10\n\n\nLanguages: Deep Speech, understands the languages you know\n\n\nChallenge Rating: None (XP 0; PB equals your Proficiency Bonus)\n\n\nTraits\n\n\nRegeneration (Slaad Only). The spirit regains 5 Hit Points at the start of its turn if it has at least 1 Hit Point.\n\n\nWhispering Aura (Mind Flayer Only). At the start of each of the spirit’s turns, the spirit emits psionic energy if it doesn’t have the Incapacitated condition. Wisdom Saving Throw: DC equals your spell save DC, each creature (other than you) within 5 feet of the spirit. Failure: 2d6 Psychic damage.\n\n\nActions\n\n\nMultiattack. The spirit makes a number of attacks equal to half this spell’s level (round down).\n\n\nClaw (Slaad Only). Melee Attack Roll: Bonus equals your spell attack modifier, reach 5 ft. Hit: 1d10 + 3 + the spell’s level Slashing damage, and the target can’t regain Hit Points until the start of the spirit’s next turn.\n\n\nEye Ray (Beholderkin Only). Ranged Attack Roll: Bonus equals your spell attack modifier, range 150 ft. Hit: 1d8 + 3 + the spell’s level Psychic damage.\n\n\nPsychic Slam (Mind Flayer Only). Melee Attack Roll: Bonus equals your spell attack modifier, reach 5 ft. Hit:1d8 + 3 + the spell’s level Psychic damage."
+  },
+  "Contact Other Plane": {
+    "school": "Level 5 Divination (Warlock, Wizard)",
+    "desc": "You mentally contact a demigod, the spirit of a long-dead sage, or some other knowledgeable entity from another plane. Contacting this otherworldly intelligence can break your mind. When you cast this spell, make a DC 15 Intelligence saving throw. On a successful save, you can ask the entity up to five questions. You must ask your questions before the spell ends. The DM answers each question with one word, such as “yes,” “no,” “maybe,” “never,” “irrelevant,” or “unclear” (if the entity doesn’t know the answer to the question). If a one-word answer would be misleading, the DM might instead offer a short phrase as an answer.\n\nOn a failed save, you take 6d6 Psychic damage and have the Incapacitated condition until you finish a Long Rest. A Greater Restoration spell cast on you ends this effect."
+  },
+  "Dream": {
+    "school": "Level 5 Illusion (Bard, Warlock, Wizard)",
+    "desc": "You target a creature you know on the same plane of existence. You or a willing creature you touch enters a trance state to act as a dream messenger. While in the trance, the messenger is Incapacitated and has a Speed of 0.\n\nIf the target is asleep, the messenger appears in the target’s dreams and can converse with the target as long as it remains asleep, through the spell’s duration. The messenger can also shape the dream’s environment, creating landscapes, objects, and other images. The messenger can emerge from the trance at any time, ending the spell. The target recalls the dream perfectly upon waking.\n\nIf the target is awake when you cast the spell, the messenger knows it and can either end the trance (and the spell) or wait for the target to sleep, at which point the messenger enters its dreams.\n\nYou can make the messenger terrifying to the target. If you do so, the messenger can deliver a message of no more than ten words, and then the target makes a Wisdom saving throw. On a failed save, the target gains no benefit from its rest, and it takes 3d6 Psychic damage when it wakes up."
+  },
+  "Hold Monster": {
+    "school": "Level 5 Enchantment (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "Choose a creature that you can see within range. The target must succeed on a Wisdom saving throw or have the Paralyzed condition for the duration. At the end of each of its turns, the target repeats the save, ending the spell on itself on a success.\n\nUsing a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 5."
+  },
+  "Jallarzi's Storm of Radiance": {
+    "school": "Level 5 Evocation (Warlock, Wizard)",
+    "desc": "You unleash a storm of flashing light and raging thunder in a 10-foot-radius, 40-foot-high Cylinder centered on a point you can see within range. While in this area, creatures have the Blinded and Deafened conditions, and they can’t cast spells with a Verbal component.\n\nWhen the storm appears, each creature in it makes a Constitution saving throw, taking 2d10 Radiant damage and 2d10 Thunder damage on a failed save or half as much damage on a successful one. A creature also makes this save when it enters the spell’s area for the first time on a turn or ends its turn there. A creature makes this save only once per turn.\n\nUsing a Higher-Level Spell Slot. The Radiant and Thunder damage increase by 1d10 for each spell slot level above 5."
+  },
+  "Mislead": {
+    "school": "Level 5 Illusion (Bard, Warlock, Wizard)",
+    "desc": "You gain the Invisible condition at the same time that an illusory double of you appears where you are standing. The double lasts for the duration, but the invisibility ends immediately after you make an attack roll, deal damage, or cast a spell.\n\nAs a Magic action, you can move the illusory double up to twice your Speed and make it gesture, speak, and behave in whatever way you choose. It is intangible and invulnerable.\n\nYou can see through its eyes and hear through its ears as if you were located where it is."
+  },
+  "Planar Binding": {
+    "school": "Level 5 Abjuration (Bard, Cleric, Druid, Warlock, Wizard)",
+    "desc": "You attempt to bind a Celestial, an Elemental, a Fey, or a Fiend to your service. The creature must be within range for the entire casting of the spell. (Typically, the creature is first summoned into the center of the inverted version of the Magic Circle spell to trap it while this spell is cast.) At the completion of the casting, the target must succeed on a Charisma saving throw or be bound to serve you for the duration. If the creature was summoned or created by another spell, that spell’s duration is extended to match the duration of this spell.\n\nA bound creature must follow your commands to the best of its ability. You might command the creature to accompany you on an adventure, to guard a location, or to deliver a message. If the creature is Hostile, it strives to twist your commands to achieve its own objectives. If the creature carries out your commands completely before the spell ends, it travels to you to report this fact if you are on the same plane of existence. If you are on a different plane, it returns to the place where you bound it and remains there until the spell ends.\n\nUsing a Higher-Level Spell Slot. The duration increases with a spell slot of level 6 (10 days), 7 (30 days), 8 (180 days), and 9 (366 days)."
+  },
+  "Scrying": {
+    "school": "Level 5 Divination (Bard, Cleric, Druid, Warlock, Wizard)",
+    "desc": "You can see and hear a creature you choose that is on the same plane of existence as you. The target makes a Wisdom saving throw, which is modified (see the tables below) by how well you know the target and the sort of physical connection you have to it. The target doesn’t know what it is making the save against, only that it feels uneasy.\n\nYour Knowledge of the Target Is&#8230;\nSave Modifier\n\n\nSecondhand (heard of the target)\n+5\n\n\nFirsthand (met the target)\n+0\n\n\nExtensive (know the target well)\n-5\n\n\n\n\nYou Have the Target’s&#8230;\nSave Modifier\n\n\nPicture or other likeness\n-2\n\n\nGarment or other possession\n-4\n\n\nBody part, lock of hair, or bit of nail\n-10\n\nOn a successful save, the target isn’t affected, and you can’t use this spell on it again for 24 hours.\n\nOn a failed save, the spell creates an Invisible, intangible sensor within 10 feet of the target. You can see and hear through the sensor as if you were there. The sensor moves with the target, remaining within 10 feet of it for the duration. If something can see the sensor, it appears as a luminous orb about the size of your fist.\n\nInstead of targeting a creature, you can target a location you have seen. When you do so, the sensor appears at that location and doesn’t move."
+  },
+  "Synaptic Static": {
+    "school": "Level 5 Enchantment (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "You cause psychic energy to erupt at a point within range. Each creature in a 20-foot-radius Sphere centered on that point makes an Intelligence saving throw, taking 8d6 Psychic damage on a failed save or half as much damage on a successful one.\n\nOn a failed save, a target also has muddled thoughts for 1 minute. During that time, it subtracts 1d6 from all its attack rolls and ability checks, as well as any Constitution saving throws to maintain Concentration. The target makes an Intelligence saving throw at the end of each of its turns, ending the effect on itself on a success."
+  },
+  "Teleportation Circle": {
+    "school": "Level 5 Conjuration (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "As you cast the spell, you draw a 5-foot-radius circle on the ground inscribed with sigils that link your location to a permanent teleportation circle of your choice whose sigil sequence you know and that is on the same plane of existence as you. A shimmering portal opens within the circle you drew and remains open until the end of your next turn. Any creature that enters the portal instantly appears within 5 feet of the destination circle or in the nearest unoccupied space if that space is occupied.\n\nMany major temples, guildhalls, and other important places have permanent teleportation circles. Each circle includes a unique sigil sequence—a string of runes arranged in a particular pattern.\n\nWhen you first gain the ability to cast this spell, you learn the sigil sequences for two destinations on the Material Plane, determined by the DM. You might learn additional sigil sequences during your adventures. You can commit a new sigil sequence to memory after studying it for 1 minute.\n\nYou can create a permanent teleportation circle by casting this spell in the same location every day for 365 days."
+  },
+  "Arcane Gate": {
+    "school": "Level 6 Conjuration (Sorcerer, Warlock, Wizard)",
+    "desc": "You create linked teleportation portals. Choose two Large, unoccupied spaces on the ground that you can see, one space within range and the other one within 10 feet of you. A circular portal opens in each of those spaces and remains for the duration.\n\nThe portals are two-dimensional glowing rings filled with mist that blocks sight. They hover inches from the ground and are perpendicular to it.\n\nA portal is open on only one side (you choose which). Anything entering the open side of a portal exits from the open side of the other portal as if the two were adjacent to each other. As a Bonus Action, you can change the facing of the open sides."
+  },
+  "Circle Of Death": {
+    "school": "Level 6 Necromancy (Sorcerer, Warlock, Wizard)",
+    "desc": "Negative energy ripples out in a 60-foot-radius Sphere from a point you choose within range. Each creature in that area makes a Constitution saving throw, taking 8d8 Necrotic damage on a failed save or half as much damage on a successful one.\n\nUsing a Higher-Level Spell Slot. The damage increases by 2d8 for each spell slot level above 6."
+  },
+  "Create Undead": {
+    "school": "Level 6 Necromancy (Cleric, Warlock, Wizard)",
+    "desc": "You can cast this spell only at night. Choose up to three corpses of Medium or Small Humanoids within range. Each one becomes a Ghoul under your control (see the Monster Manual for its stat block).\n\nAs a Bonus Action on each of your turns, you can mentally command any creature you animated with this spell if the creature is within 120 feet of you (if you control multiple creatures, you can command any of them at the same time, issuing the same command to them). You decide what action the creature will take and where it will move on its next turn, or you can issue a general command, such as to guard a particular place. If you issue no commands, the creature takes the Dodge action and moves only to avoid harm. Once given an order, the creature continues to follow the order until its task is complete.\n\nThe creature is under your control for 24 hours, after which it stops obeying any command you’ve given it. To maintain control of the creature for another 24 hours, you must cast this spell on the creature before the current 24-hour period ends. This use of the spell reasserts your control over up to three creatures you have animated with this spell rather than animating new ones.\n\nUsing a Higher-Level Spell Slot. If you use a level 7 spell slot, you can animate or reassert control over four Ghouls. If you use a level 8 spell slot, you can animate or reassert control over five Ghouls or two Ghasts or Wights. If you use a level 9 spell slot, you can animate or reassert control over six Ghouls, three Ghasts or Wights, or two Mummies. See the Monster Manual for these stat blocks."
+  },
+  "Eyebite": {
+    "school": "Level 6 Necromancy (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "For the duration, your eyes become an inky void. One creature of your choice within 60 feet of you that you can see must succeed on a Wisdom saving throw or be affected by one of the following effects of your choice for the duration.\n\nOn each of your turns until the spell ends, you can take a Magic action to target another creature but can’t target a creature again if it has succeeded on a save against this casting of the spell.\n\nAsleep. The target has the Unconscious condition. It wakes up if it takes any damage or if another creature takes an action to shake it awake.\n\nPanicked. The target has the Frightened condition. On each of its turns, the Frightened target must take the Dash action and move away from you by the safest and shortest route available. If the target moves to a space at least 60 feet away from you where it can’t see you, this effect ends.\n\nSickened. The target has the Poisoned condition."
+  },
+  "Summon Fiend": {
+    "school": "Level 6 Conjuration (Warlock, Wizard)",
+    "desc": "You call forth a fiendish spirit. It manifests in an unoccupied space that you can see within range and uses the Fiendish Spirit stat block. When you cast the spell, choose Demon, Devil, or Yugoloth. The creature resembles a Fiend of the chosen type, which determines certain details in its stat block. The creature disappears when it drops to 0 Hit Points or when the spell ends.\n\nThe creature is an ally to you and your allies. In combat, the creature shares your Initiative count, but it takes its turn immediately after yours. It obeys your verbal commands (no action required by you). If you don’t issue any, it takes the Dodge action and uses its movement to avoid danger.\n\nUsing a Higher-Level Spell Slot. Use the spell slot’s level for the spell’s level in the stat block.\n\nFiendish Spirit\n\n\nLarge Fiend, Neutral\n\n\nArmor Class: 12 + the spell’s level\n\n\nHit Points: HP 50 (Demon only) or 40 (Devil only) or 60 (Yugoloth only) + 15 for each spell level above 6\n\n\nSpeed: 40 ft.; Climb 40 ft. (Demon only); Fly 60 ft. (Devil only)\n\n\nSTR (Mod/Save)\nDEX (Mod/Save)\nCON (Mod/Save)\nINT (Mod/Save)\nWIS (Mod/Save)\nCHA (Mod/Save)\n\n\n13 (+1/+1)\n16 (+3/+3)\n15 (+2/+2)\n10 (+0/+0)\n10 (+0/+0)\n16 (+3/+3)\n\n\nResistances: Fire\n\n\nImmunities: Poison; Poisoned\n\n\nSenses: Darkvision 60 ft., Passive Perception 10\n\n\nLanguages: Abyssal, Infernal, Telepathy 60 ft.\n\n\nChallenge Rating: None (XP 0; PB equals your Proficiency Bonus)\n\n\nTraits\n\n\nDeath Throes (Demon Only). When the spirit drops to 0 Hit Points or the spell ends, the spirit explodes. Dexterity Saving Throw: DC equals your spell save DC, each creature in a 10-foot Emanation originating from the spirit. Failure: 2d10 plus this spell’s level Fire damage. Success: Half damage.\n\n\nDevil’s Sight (Devil Only). Magical Darkness doesn’t impede the spirit’s Darkvision.\n\n\nMagic Resistance. The spirit has Advantage on saving throws against spells and other magical effects.\n\n\nActions\n\n\nMultiattack. The spirit makes a number of attacks equal to half this spell’s level (round down).\n\n\nBite (Demon Only). Melee Attack Roll: Bonus equals your spell attack modifier, reach 5 ft. Hit: 1d12 + 3 + the spell’s level Necrotic damage.\n\n\nClaws (Yugoloth Only). Melee Attack Roll: Bonus equals your spell attack modifier, reach 5 ft. Hit: 1d8 + 3 + the spell’s level Slashing damage. Immediately after the attack hits or misses, the spirit can teleport up to 30 feet to an unoccupied space it can see.\n\n\nFiery Strike (Devil Only). Melee or Ranged Attack Roll: Bonus equals your spell attack modifier, reach 5 ft. or range 150 ft. Hit: 2d6 + 3 + the spell’s level Fire damage."
+  },
+  "Tasha's Bubbling Cauldron": {
+    "school": "Level 6 Conjuration (Warlock, Wizard)",
+    "desc": "You conjure a claw-footed cauldron filled with bubbling liquid. The cauldron appears in an unoccupied space on the ground within 5 feet of you and lasts for the duration. The cauldron can't be moved and disappears when the spell ends, along with the bubbling liquid inside it.\n\nThe liquid in the cauldron duplicates the properties of a Common or an Uncommon potion of your choice (such as a Potion of Healing). As a Bonus Action, you or an ally can reach into the cauldron and withdraw one potion of that kind. The potion is contained in a vial that disappears when the potion is consumed. The cauldron can produce a number of these potions equal to your spellcasting ability modifier (minimum 1). When the last of these potions is withdrawn from the cauldron, the cauldron disappears, and the spell ends.\n\nPotions obtained from the cauldron that aren't consumed disappear when you cast this spell again."
+  },
+  "True Seeing": {
+    "school": "Level 6 Divination (Bard, Cleric, Sorcerer, Warlock, Wizard)",
+    "desc": "For the duration, the willing creature you touch has Truesight with a range of 120 feet."
+  },
+  "Etherealness": {
+    "school": "Level 7 Conjuration (Bard, Cleric, Sorcerer, Warlock, Wizard)",
+    "desc": "You step into the border regions of the Ethereal Plane, where it overlaps with your current plane. You remain in the Border Ethereal for the duration. During this time, you can move in any direction. If you move up or down, every foot of movement costs an extra foot. You can perceive the plane you left, which looks gray, and you can’t see anything there more than 60 feet away.\n\nWhile on the Ethereal Plane, you can affect and be affected only by creatures, objects, and effects on that plane. Creatures that aren’t on the Ethereal Plane can’t perceive or interact with you unless a feature gives them the ability to do so.\n\nWhen the spell ends, you return to the plane you left in the spot that corresponds to your space in the Border Ethereal. If you appear in an occupied space, you are shunted to the nearest unoccupied space and take Force damage equal to twice the number of feet you are moved.\n\nThis spell ends instantly if you cast it while you are on the Ethereal Plane or a plane that doesn’t border it, such as one of the Outer Planes.\n\nUsing a Higher-Level Spell Slot. You can target up to three willing creatures (including yourself) for each spell slot level above 7. The creatures must be within 10 feet of you when you cast the spell."
+  },
+  "Finger of Death": {
+    "school": "Level 7 Necromancy (Sorcerer, Warlock, Wizard)",
+    "desc": "You unleash negative energy toward a creature you can see within range. The target makes a Constitution saving throw, taking 7d8 + 30 Necrotic damage on a failed save or half as much damage on a successful one.\n\nA Humanoid killed by this spell rises at the start of your next turn as a Zombie (see appendix B) that follows your verbal orders."
+  },
+  "Forcecage": {
+    "school": "Level 7 Evocation (Bard, Warlock, Wizard)",
+    "desc": "An immobile, Invisible, Cube-shaped prison composed of magical force springs into existence around an area you choose within range. The prison can be a cage or a solid box, as you choose.\n\nA prison in the shape of a cage can be up to 20 feet on a side and is made from 1/2-inch diameter bars spaced 1/2 inch apart. A prison in the shape of a box can be up to 10 feet on a side, creating a solid barrier that prevents any matter from passing through it and blocking any spells cast into or out from the area.\n\nWhen you cast the spell, any creature that is completely inside the cage’s area is trapped. Creatures only partially within the area, or those too large to fit inside it, are pushed away from the center of the area until they are completely outside it.\n\nA creature inside the cage can’t leave it by nonmagical means. If the creature tries to use teleportation or interplanar travel to leave, it must first make a Charisma saving throw. On a successful save, the creature can use that magic to exit the cage. On a failed save, the creature doesn’t exit the cage and wastes the spell or effect. The cage also extends into the Ethereal Plane, blocking ethereal travel.\n\nThis spell can’t be dispelled by Dispel Magic."
+  },
+  "Plane Shift": {
+    "school": "Level 7 Conjuration (Cleric, Druid, Sorcerer, Warlock, Wizard)",
+    "desc": "You and up to eight willing creatures who link hands in a circle are transported to a different plane of existence. You can specify a target destination in general terms, such as the City of Brass on the Elemental Plane of Fire or the palace of Dispater on the second level of the Nine Hells, and you appear in or near that destination, as determined by the DM.\n\nAlternatively, if you know the sigil sequence of a teleportation circle on another plane of existence, this spell can take you to that circle. If the teleportation circle is too small to hold all the creatures you transported, they appear in the closest unoccupied spaces next to the circle."
+  },
+  "Befuddlement": {
+    "school": "Level 8 Enchantment (Bard, Druid, Warlock, Wizard)",
+    "desc": "You blast the mind of a creature that you can see within range. The target makes an Intelligence saving throw.\n\nOn a failed save, the target takes 10d12 Psychic damage and can't cast spells or take the Magic action. At the end of every 30 days, the target repeats the save, ending the effect on a success. The effect can also be ended by the Greater Restoration, Heal, or Wish spell.\n\nOn a successful save, the target takes half as much damage only."
+  },
+  "Demiplane": {
+    "school": "Level 8 Conjuration (Sorcerer, Warlock, Wizard)",
+    "desc": "You create a shadowy Medium door on a flat solid surface that you can see within range. This door can be opened and closed, and it leads to a demiplane that is an empty room 30 feet in each dimension, made of wood or stone (your choice).\n\nWhen the spell ends, the door vanishes, and any objects inside the demiplane remain there. Any creatures inside also remain unless they opt to be shunted through the door as it vanishes, landing with the Prone condition in the unoccupied spaces closest to the door’s former space.\n\nEach time you cast this spell, you can create a new demiplane or connect the shadowy door to a demiplane you created with a previous casting of this spell. Additionally, if you know the nature and contents of a demiplane created by a casting of this spell by another creature, you can connect the shadowy door to that demiplane instead."
+  },
+  "Dominate Monster": {
+    "school": "Level 8 Enchantment (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "One creature you can see within range must succeed on a Wisdom saving throw or have the Charmed condition for the duration. The target has Advantage on the save if you or your allies are fighting it. Whenever the target takes damage, it repeats the save, ending the spell on itself on a success.\n\nYou have a telepathic link with the Charmed target while the two of you are on the same plane of existence. On your turn, you can use this link to issue commands to the target (no action required), such as “Attack that creature,” “Move over there,” or “Fetch that object.” The target does its best to obey on its turn. If it completes an order and doesn’t receive further direction from you, it acts and moves as it likes, focusing on protecting itself.\n\nYou can command the target to take a Reaction but must take your own Reaction to do so.\n\nUsing a Higher-Level Spell Slot. Your Concentration can last longer with a level 9 spell slot (up to 8 hours)."
+  },
+  "Glibness": {
+    "school": "Level 8 Enchantment (Bard, Warlock)",
+    "desc": "Until the spell ends, when you make a Charisma check, you can replace the number you roll with a 15. Additionally, no matter what you say, magic that would determine if you are telling the truth indicates that you are being truthful."
+  },
+  "Power Word Stun": {
+    "school": "Level 8 Enchantment (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "You overwhelm the mind of one creature you can see within range. If the target has 150 Hit Points or fewer, it has the Stunned condition. Otherwise, its Speed is 0 until the start of your next turn.\n\nThe Stunned target makes a Constitution saving throw at the end of each of its turns, ending the condition on itself on a success."
+  },
+  "Astral Projection": {
+    "school": "Level 9 Necromancy (Cleric, Warlock, Wizard)",
+    "desc": "You and up to eight willing creatures within range project your astral bodies into the Astral Plane (the spell ends instantly if you are already on that plane). Each target's body is left behind in a state of suspended animation; it has the Unconscious condition, doesn't need food or air, and doesn't age.\n\nA target's astral form resembles its body in almost every way, replicating it's game statistics and possessions. The principal difference is the addition of a silvery cord that trails from between the shoulderblades of the astral form. The cord fades from view after 1 foot. If the cord is cut - which happens only when an effect states that it does so - the target's body and astral form both die.\n\nA target's astral form can travel through the Astral Plane. The moment an astral form leaves that plane, the target's body and possessions travel along the silver cord, causing the target to re-enter its body on the new plane.\n\nAny damage or other effects that apply to an astral form have no effect on the target's body and vice versa. If a target's body or astral form drops to 0 Hit Points, the spell ends for that target. The spell ends for all the targets if you take a Magic action to dismiss it.\n\nWhen the spell ends for a target who isn't dead, the target reappears in its body and exits the state of suspended animation."
+  },
+  "Blade Of Disaster": {
+    "school": "Level 9 Conjuration (Sorcerer, Warlock, Wizard)",
+    "desc": "You create a 3-foot-long blade-shaped planar rift that lasts for the duration. The rift appears within range in a space of your choice, and you can immediately make up to two melee spell attacks, each one against a creature or object within 5 feet of the rift. On a hit, the target takes 10d6 Force damage. This attack scores a Critical Hit if the number on the d20 is 18 or higher.\n\nAs a Bonus Action on your later turns, you can move the rift up to 60 feet and repeat the two attacks against a creature or an object within 5 feet of it. You can direct the attacks at the same target or at different ones.\n\nThe blade can harmlessly pass through any barrier, including ones created by spells like Wall of Force."
+  },
+  "Foresight": {
+    "school": "Level 9 Divination (Bard, Druid, Warlock, Wizard)",
+    "desc": "You touch a willing creature and bestow a limited ability to see into the immediate future. For the duration, the target has Advantage on D20 Tests, and other creatures have Disadvantage on attack rolls against it. The spell ends early if you cast it again."
+  },
+  "Gate": {
+    "school": "Level 9 Conjuration (Cleric, Sorcerer, Warlock, Wizard)",
+    "desc": "You conjure a portal linking an unoccupied space you can see within range to a precise location on a different plane of existence. The portal is a circular opening, which you can make 5 to 20 feet in diameter. You can orient the portal in any direction you choose. The portal lasts for the duration, and the portal's destination is visible through it.\n\nThe portal has a front and a back on each plane where it appears. Travel through the portal is possible only by moving through its front. Anything that does so is instantly transported to the other plane, appearing in the unoccupied space nearest to the portal.\n\nDeities and other planar rulers can prevent portals created by this spell from opening in their presence or anywhere within their domains.\n\nWhen you cast this spell, you can speak the name of a specific creature (a pseudonym, title, or nickname doesn't work). If that creature is on a plane other than the one you are on, the portal opens next to the named creature and transports it to the nearest unoccupied space on your side of the portal. You gain no special power over the creature, and it is free to act as the DM deems appropriate. It might leave, attack you, or help you."
+  },
+  "Imprisonment": {
+    "school": "Level 9 Abjuration (Warlock, Wizard)",
+    "desc": "You create a magical restraint to hold a creature that you can see within range. The target must make a Wisdom saving throw. On a successful save, the target is unaffected, and it is immune to this spell for the next 24 hours. On a failed save, the target is imprisoned. While imprisoned, the target doesn't need to breathe, eat, or drink, and it doesn't age. Divination spells can't locate or perceive the imprisoned target, and the target can't teleport.\n\nUntil the spell ends, the target is also affected by one of the following effects of your choice:\n\nBurial. The target is entombed beneath the earth in a hollow globe of magical force that is just large enough to contain the target. Nothing can pass into or out of the globe.\n\nChaining. Chains firmly rooted in the ground hold the target in place. The target has the Restrained condition and can't be moved by any means.\n\nHedged Prison. The target is trapped in a demiplane that is warded against teleportation and planar travel. The demiplane is your choice of a labyrinth, a cage, a tower, or the like.\n\nMinimus Containment. The target becomes 1 inch tall and is trapped inside an indestructible gemstone or a similar object. Light can pass through the gemstone (allowing the target to see out and other creatures to see in), but nothing else can pass through by any means.\n\nSlumber. The target has the Unconscious condition and can't be awoken.\n\nEnding the Spell. When you cast the spell, specify a trigger that will end it. The trigger can be as simple or as elaborate as you choose, but the DM must agree that it has a high likelihood of happening within the next decade. The trigger must be an observable action, such as someone making a particular offering at the temple of your god, saving your true love, or defeating a specific monster.\n\nA Dispel Magic spell can end the spell only if it is cast with a level 9 spell slot, targeting either the prison or the component used to create it."
+  },
+  "Power Word Kill": {
+    "school": "Level 9 Enchantment (Bard, Sorcerer, Warlock, Wizard)",
+    "desc": "You compel one creature you can see within range to die. If the target has 100 Hit Points or fewer, it dies. Otherwise, it takes 12d12 Psychic damage."
+  },
+  "True Polymorph": {
+    "school": "Level 9 Transmutation (Bard, Warlock, Wizard)",
+    "desc": "Choose one creature or nonmagical object that you can see within range. The creature shape-shifts into a different creature or a nonmagical object, or the object shape-shifts into a creature (the object must be neither worn nor carried). The transformation lasts for the duration or until the target dies or is destroyed, but if you maintain Concentration on this spell for the full duration, the spell lasts until dispelled.\n\nAn unwilling creature can make a Wisdom saving throw, and if it succeeds, it isn't affected by this spell.\n\nCreature into Creature. If you turn a creature into another kind of creature, the new form can be any kind you choose that has a Challenge Rating equal to or less than the target’s Challenge Rating or level. The target's game statistics are replaced by the stat block of the new form, but it retains its Hit Points, Hit Point Dice, alignment, and personality.\n\nThe target gains a number of Temporary Hit Points equal to the Hit Points of the new form. These Temporary Hit Points vanish if any remain when the spell ends.\n\nThe target is limited in the actions it can perform by the anatomy of its new form, and it can't speak or cast spells.\n\nThe target's gear melds into the new form. The creature can't use or otherwise benefit from any of that equipment.\n\nObject into Creature. You can turn an object into any kind of creature, as long as the creature's size is no larger than the object's size and the creature has a Challenge Rating of 9 or lower. The creature is Friendly to you and your allies. In combat, it takes its turns immediately after yours, and it obeys your commands.\n\nIf the spell lasts more than an hour, you no longer control the creature. It might remain Friendly to you, depending on how you have treated it.\n\nCreature into Object. If you turn a creature into an object, it transforms along with whatever it is wearing and carrying into that form, as long as the object's size is no larger than the creature's size. The creature's statistics become those of the object, and the creature has no memory of time spent in this form after the spell ends and it returns to normal."
+  },
+  "Weird": {
+    "school": "Level 9 Illusion (Warlock, Wizard)",
+    "desc": "You try to create illusory terrors in others' minds. Each creature of your choice in a 30-foot-radius Sphere centered on a point within range makes a Wisdom saving throw. On a failed save, a target takes 10d10 Psychic damage and has the Frightened condition for the duration. On a successful save, a target takes half as much damage only.\n\nA Frightened target makes a Wisdom saving throw at the end of each of its turns. On a failed save, it takes 5d10 Psychic damage. On a successful save, the spell ends on that target."
+  }
+};
 
 // 2024 PHB feats catalog. Each feat has:
 //   category:   'Origin' | 'General' | 'Epic Boon'
@@ -8222,8 +8631,10 @@ function showInfo(title, bodyHTML) {
 }
 // Render a spell's stat block in the info modal.
 function showSpellInfo(spell) {
-  const subtitle = `${spell.level} · ${spell.school}${spell.concentration ? ' · Concentration' : ''}`;
-  const body = `
+  const details = (typeof SPELL_DETAILS !== 'undefined') ? SPELL_DETAILS[spell.name] : null;
+  const subtitle = details ? details.school
+    : `${spell.level} · ${spell.school}${spell.concentration ? ' · Concentration' : ''}`;
+  let body = `
     <div class="spell-info-subtitle">${subtitle}</div>
     <dl class="spell-info-grid">
       <dt>Casting Time</dt><dd>${spell.time}</dd>
@@ -8232,6 +8643,22 @@ function showSpellInfo(spell) {
       <dt>Duration</dt><dd>${spell.duration}</dd>
     </dl>
   `;
+  if (details && details.desc) {
+    const paragraphs = details.desc.split(/\n\n+/);
+    const rendered = paragraphs.map(p => {
+      // Bold an "X Upgrade." or "Using a Higher-Level Spell Slot." or "At Higher Levels." lead-in
+      const upgradeMatch = p.match(/^(Cantrip Upgrade|Using a Higher-Level Spell Slot|At Higher Levels|Higher-Level Spell Slot|Higher Levels)\.\s+/);
+      if (upgradeMatch) {
+        const lead = upgradeMatch[0];
+        const rest = p.slice(lead.length);
+        return `<p class="spell-info-upgrade"><strong>${lead.trim()}</strong> ${rest}</p>`;
+      }
+      return `<p>${p}</p>`;
+    }).join('');
+    body += `<div class="spell-info-body">${rendered}</div>`;
+  } else {
+    body += `<p style="font-style:italic;color:var(--parchment-aged);margin-top:0.8rem;">Full spell description not loaded for this spell.</p>`;
+  }
   showInfo(spell.name, body);
 }
 function closeConfirmModal() {
