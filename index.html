@@ -1554,6 +1554,100 @@ body.dm-mode .infusion-row input { pointer-events: none; opacity: 0.5; }
   color: var(--parchment-aged);
   margin-top: 0.3rem;
 }
+.defense-cell .stat-extra {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  margin-top: 0.4rem;
+  display: block;
+}
+
+/* COMBAT STATUS strip — passive resistances + while-raging state */
+.combat-status {
+  margin-top: 1.2rem;
+  padding: 0.9rem 1.2rem;
+  border: 1px solid var(--gold-tarnish);
+  background: rgba(42, 10, 10, 0.6);
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1rem;
+  align-items: start;
+  font-family: 'EB Garamond', serif;
+  font-size: 0.9rem;
+}
+.combat-status .status-section .status-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.3rem;
+}
+.combat-status .resistance-list {
+  color: var(--parchment);
+  line-height: 1.5;
+}
+.combat-status .resistance-tag {
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 0.1rem 0.45rem;
+  background: rgba(217, 32, 32, 0.18);
+  border: 1px solid var(--gold-tarnish);
+  font-size: 0.78rem;
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.combat-status .raging-badge {
+  display: inline-block;
+  font-family: 'Cinzel', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--gold);
+  padding: 0.2rem 0.7rem;
+  margin-right: 0.6rem;
+  box-shadow: 0 0 12px rgba(255, 58, 58, 0.6), inset 0 0 6px rgba(168, 16, 16, 0.4);
+  animation: rage-pulse 2s ease-in-out infinite;
+}
+.combat-status .raging-effects {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--parchment);
+  line-height: 1.7;
+}
+.combat-status .raging-effects li::before {
+  content: '✦';
+  color: var(--gold);
+  margin-right: 0.5rem;
+}
+
+.save-tag {
+  display: inline-block;
+  margin-left: 0.4rem;
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  background: rgba(217, 32, 32, 0.18);
+  border: 1px solid var(--gold-tarnish);
+  padding: 0.05rem 0.35rem;
+  vertical-align: middle;
+}
+
+/* Body-wide "currently raging" glow on the container */
+body.raging .container {
+  box-shadow:
+    0 0 0 1px rgba(217, 32, 32, 0.6),
+    0 0 28px rgba(255, 58, 58, 0.35),
+    0 0 56px rgba(168, 16, 16, 0.18);
+}
 
 .hp-current {
   display: flex;
@@ -2110,6 +2204,8 @@ body.dm-mode .rage-btn { pointer-events: none; opacity: 0.6; cursor: default; }
   .two-col { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(3, 1fr); }
   .defense-row { grid-template-columns: repeat(2, 1fr); }
+  .combat-status { padding: 1rem; }
+  .combat-status .status-effects { grid-template-columns: 1fr; }
   .level-inner { flex-direction: column; align-items: stretch; }
 }
 
@@ -3191,6 +3287,9 @@ body.dm-mode .dm-hide { display: none; }
         <div class="sub" id="speed-sub">walking</div>
       </div>
     </div>
+
+    <!-- Combat Status strip: damage resistances (passive) + while-raging state -->
+    <div class="combat-status" id="combat-status" hidden></div>
   </details>
 
   <!-- THE BEARER -->
@@ -6004,7 +6103,17 @@ function render() {
   const acSub = document.getElementById('ac-sub');
   if (acSub) acSub.textContent = b > 0 ? 'unarmored: 10 + DEX + CON' : '10 + DEX';
   document.getElementById('hp-max').textContent = hp;
-  document.getElementById('init-val').textContent = fmtMod(mod(stats.dex) - exhaustPen);
+  // Initiative + Feral Instinct annotation (Barb 7+ has Advantage on Initiative)
+  const initCell = document.getElementById('init-val');
+  initCell.textContent = fmtMod(mod(stats.dex) - exhaustPen);
+  const initWrap = initCell.parentElement;
+  let initExtra = initWrap.querySelector('.stat-extra');
+  if (b >= 7) {
+    if (!initExtra) { initExtra = document.createElement('span'); initExtra.className = 'stat-extra'; initWrap.appendChild(initExtra); }
+    initExtra.textContent = '◆ Adv · Feral Instinct';
+  } else if (initExtra) {
+    initExtra.remove();
+  }
 
   // Speed (Goliath 35 ft walking; +10 ft Barbarian Fast Movement at level 5+; conditions can zero it)
   const condEffects = getConditionEffects();
@@ -6021,16 +6130,26 @@ function render() {
   // (HP formula is now reachable via the ⓘ button on the Hit Points cell.)
   document.getElementById('temp-hp').value = state.tempHp || 0;
 
-  // Saves
+  // Saves (with annotations: Rage Advantage on STR, Eldritch Mind Adv on Concentration CON saves)
   const savesGrid = document.getElementById('saves-grid');
   savesGrid.innerHTML = '';
   const labels = { str: 'Strength', dex: 'Dexterity', con: 'Constitution', int: 'Intelligence', wis: 'Wisdom', cha: 'Charisma' };
+  const invocations = new Set(state.warlockInvocations || []);
+  const hasEldritchMind = invocations.has('Eldritch Mind');
+  const isRaging = !!state.rageActive;
   for (const stat of ['str','dex','con','int','wis','cha']) {
     const proficient = hasSaveProf(stat, level);
     const value = mod(stats[stat]) + (proficient ? pb : 0) - exhaustPen;
     const row = document.createElement('div');
     row.className = 'skill-row' + (proficient ? ' proficient' : '');
-    row.innerHTML = `<span class="skill-name">${labels[stat]}</span><span class="skill-value">${fmtMod(value)}</span>`;
+    const tags = [];
+    if (stat === 'str' && isRaging) tags.push('<span class="save-tag" title="Rage: Advantage on Strength saves">Adv · Rage</span>');
+    if (stat === 'con' && hasEldritchMind) tags.push('<span class="save-tag" title="Eldritch Mind: Advantage on Concentration saves">Adv on Conc · Eldritch Mind</span>');
+    if (stat === 'dex') {
+      // Danger Sense Barb 2+ (Adv vs effects you can see)
+      if (b >= 2) tags.push('<span class="save-tag" title="Danger Sense: Advantage on DEX saves against effects you can see, unless Incapacitated">Adv vs visible · Danger Sense</span>');
+    }
+    row.innerHTML = `<span class="skill-name">${labels[stat]}${tags.length ? ' ' + tags.join(' ') : ''}</span><span class="skill-value">${fmtMod(value)}</span>`;
     savesGrid.appendChild(row);
   }
   const savesNote = document.getElementById('saves-note');
@@ -6061,6 +6180,9 @@ function render() {
 
   // Goliath Giant Ancestry feature card
   renderGiantAncestry();
+
+  // Combat Status strip (resistances + while-raging summary)
+  renderCombatStatus(level);
 
   // Combat resources + concentration + death saves + conditions
   renderCombatResources(level);
@@ -6726,6 +6848,83 @@ function renderGiantAncestry() {
   }
   const sel = document.getElementById('giant-ancestry-select');
   if (sel && sel.value !== ancestry) sel.value = ancestry;
+}
+
+// Combat Status strip: passive damage resistances + while-raging effects.
+// Also toggles the body.raging class for the global glow.
+function renderCombatStatus(level) {
+  const el = document.getElementById('combat-status');
+  if (!el) return;
+  const { b, w } = classBreakdown(level);
+  const isRaging = !!state.rageActive;
+  const subclass = findChosenSubclass('warlock');
+
+  // Passive damage resistances
+  const passiveResistances = [];
+  if (w >= 6 && subclass === 'Genie Patron') {
+    // Elemental Gift: Resistance to your patron kind's damage type (Efreeti = fire)
+    const kind = (CLASS_DATA.warlock.subclassData['Genie Patron'].kind) || 'Efreeti';
+    const dmgType = (CLASS_DATA.warlock.subclassData['Genie Patron'].kindDamageType) || 'fire';
+    passiveResistances.push({ name: dmgType.charAt(0).toUpperCase() + dmgType.slice(1), source: `Elemental Gift · ${kind}` });
+  }
+
+  // Build raging effects
+  const ragingLines = [];
+  if (isRaging && b >= 1) {
+    const barbData = CLASS_DATA.barbarian.perLevel[b];
+    ragingLines.push(`+${barbData.rageDamage} damage on STR-based attacks (weapon or unarmed)`);
+    ragingLines.push(`Resistance to <strong>Bludgeoning, Piercing, Slashing</strong>`);
+    ragingLines.push(`Advantage on Strength checks &amp; Strength saves`);
+    ragingLines.push(`Can't cast spells or maintain Concentration`);
+    // Path of the Giant additions while raging
+    const barbSub = findChosenSubclass('barbarian');
+    if (b >= 3 && barbSub === 'Path of the Giant') {
+      const reach = b >= 14 ? 10 : 5;
+      const size = b >= 14 ? 'Large or Huge (your choice)' : 'Large';
+      ragingLines.push(`Reach <strong>+${reach} ft</strong> · Size becomes <strong>${size}</strong> (Giant Stature)`);
+      ragingLines.push(`Crushing Throw: Rage Damage applies to thrown STR-weapon ranged attacks`);
+    }
+    // Elemental Cleaver damage type (Barb 6+ PotG)
+    if (b >= 6 && barbSub === 'Path of the Giant' && state.elementalCleaverType) {
+      const extra = b >= 14 ? '2d6' : '1d6';
+      ragingLines.push(`Elemental Cleaver: bonded weapon deals <strong>${state.elementalCleaverType}</strong> damage, +${extra} of that type, gains Thrown 20/60`);
+    }
+  }
+
+  // Render
+  if (passiveResistances.length === 0 && !isRaging) {
+    el.hidden = true;
+    document.body.classList.toggle('raging', false);
+    return;
+  }
+  el.hidden = false;
+  document.body.classList.toggle('raging', isRaging);
+
+  const resBlock = passiveResistances.length > 0
+    ? `<div class="status-section">
+        <div class="status-label">Damage Resistances</div>
+        <div class="resistance-list">
+          ${passiveResistances.map(r => `<span class="resistance-tag" title="${r.source}">${r.name}</span>`).join('')}
+        </div>
+      </div>`
+    : `<div class="status-section">
+        <div class="status-label">Damage Resistances</div>
+        <div class="resistance-list" style="font-style:italic;color:var(--parchment-aged);">—</div>
+      </div>`;
+
+  const ragingBlock = isRaging
+    ? `<div class="status-section">
+        <div class="status-label"><span class="raging-badge">Raging</span></div>
+        <ul class="raging-effects">
+          ${ragingLines.map(l => `<li>${l}</li>`).join('')}
+        </ul>
+      </div>`
+    : `<div class="status-section">
+        <div class="status-label">Combat State</div>
+        <div class="resistance-list" style="font-style:italic;color:var(--parchment-aged);">Not raging.</div>
+      </div>`;
+
+  el.innerHTML = resBlock + ragingBlock;
 }
 
 function renderConditions() {
