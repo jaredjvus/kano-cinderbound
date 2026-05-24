@@ -6,22 +6,23 @@
 <title>Kano, the Cinder-Bound — Character Sheet</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Cinzel:wght@500;600;700;800&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Special+Elite&family=Major+Mono+Display&family=VT323&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Cinzel:wght@500;600;700;800&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Pirata+One&family=MedievalSharp&display=swap" rel="stylesheet">
 <style>
 :root {
-  /* Kano palette: Volcanic — cooled obsidian with cracks of ember orange. */
-  --ink: #08060a;            /* near-black obsidian — the page itself */
-  --ink-deep: #1a1014;       /* dark stone — card grounds */
-  --parchment: #e8d5b8;      /* warm ash — primary text */
-  --parchment-aged: #b89878; /* dimmed ash for secondary text */
-  --parchment-dim: #7a6450;  /* deep ash for placeholders / faded text */
-  --blood: #6b1a1f;          /* deep magma red — "used/danger" warning */
-  --blood-bright: #a8281f;   /* brighter magma for hover/active warnings */
-  --gold: #d96a1f;           /* ember orange — primary accent */
-  --gold-bright: #ff8a2a;    /* bright ember for hover */
-  --gold-tarnish: #8a4a1a;   /* dim ember for borders/secondary */
-  --shadow: #050304;         /* near-pure black shadow */
-  --silver-crack: #ff8a2a;   /* lava crack — bright ember highlight */
+  /* Kano palette: Hellfire — the Efreeti is in charge. Crimson magma as the
+   * dominant accent; gold demoted to a secondary warmth (warnings + hover). */
+  --ink: #1a0808;            /* blood-dark, near-black with a red bias — page bg */
+  --ink-deep: #2a0a0a;       /* deep magma — card grounds */
+  --parchment: #f0d8c0;      /* warm cream — primary text */
+  --parchment-aged: #c8a888; /* dimmed cream for secondary text */
+  --parchment-dim: #8a7060;  /* dim cream for placeholders */
+  --blood: #d4a040;          /* muted gold — danger/warning (was red; now secondary) */
+  --blood-bright: #e6b860;   /* brighter gold for hover on warnings */
+  --gold: #d92020;           /* BLOOD-RED — primary accent (replaces gold) */
+  --gold-bright: #ff3a3a;    /* bright blood-red for hover */
+  --gold-tarnish: #8a1010;   /* dim blood-red for borders/secondary */
+  --shadow: #0a0404;         /* near-pure black shadow */
+  --silver-crack: #ff3a3a;   /* lava crack — bright blood-red highlight */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -29,11 +30,11 @@ html { scroll-behavior: smooth; }
 
 body {
   background: var(--ink);
-  /* Soft cobalt washes on a porcelain ground, evoking glaze pooling at the rim. */
+  /* Crimson washes pooling in the magma-dark, like an open wound in the rock. */
   background-image:
-    radial-gradient(ellipse at 18% 8%, rgba(20, 53, 115, 0.07), transparent 55%),
-    radial-gradient(ellipse at 82% 92%, rgba(70, 102, 166, 0.06), transparent 55%),
-    radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.6), transparent 75%);
+    radial-gradient(ellipse at 18% 8%, rgba(217, 32, 32, 0.14), transparent 55%),
+    radial-gradient(ellipse at 82% 92%, rgba(168, 16, 16, 0.12), transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(10, 4, 4, 0.5), transparent 75%);
   color: var(--parchment);
   font-family: 'EB Garamond', 'Cormorant Garamond', Georgia, serif;
   font-size: 17px;
@@ -111,9 +112,10 @@ body::before {
 .header > .titlebar { position: relative; z-index: 1; }
 
 .eyebrow {
-  font-family: 'VT323', 'Courier New', monospace;
+  font-family: 'Cinzel', serif;
+  font-weight: 500;
   letter-spacing: 0.35em;
-  font-size: 0.95rem;
+  font-size: 0.78rem;
   color: var(--gold);
   text-transform: uppercase;
   margin-bottom: 1.5rem;
@@ -121,17 +123,17 @@ body::before {
 }
 
 .name {
-  font-family: 'Major Mono Display', 'Courier New', monospace;
+  font-family: 'Pirata One', 'Cinzel Decorative', serif;
   font-weight: 400;
-  font-size: clamp(2.4rem, 6vw, 4.2rem);
-  letter-spacing: 0.04em;
+  font-size: clamp(2.8rem, 7vw, 5rem);
+  letter-spacing: 0.06em;
   color: var(--parchment);
-  /* Slight cobalt ghost — channels the "overclocked" glitch feel */
+  /* Blood-red halo — dark iron silhouette pouring magma light from behind */
   text-shadow:
-    0 0 1px rgba(31, 78, 163, 0.55),
-    -1px 0 0 rgba(31, 78, 163, 0.25),
-    1px 0 0 rgba(179, 89, 48, 0.18),
-    0 0 30px rgba(31, 78, 163, 0.18);
+    0 0 4px rgba(255, 58, 58, 0.6),
+    0 0 16px rgba(217, 32, 32, 0.55),
+    0 0 40px rgba(168, 16, 16, 0.35),
+    2px 2px 0 rgba(10, 4, 4, 0.85);
   line-height: 1.05;
   margin-bottom: 1rem;
 }
@@ -216,8 +218,8 @@ body::before {
   text-align: center;
   padding: 0.25rem 1rem;
   border: 2px solid var(--gold);
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 2px 8px rgba(31, 78, 163, 0.12);
+  background: rgba(42, 10, 10, 0.85);
+  box-shadow: 0 2px 12px rgba(217, 32, 32, 0.25), inset 0 0 8px rgba(255, 58, 58, 0.08);
   line-height: 1;
 }
 .level-display::before {
@@ -308,7 +310,7 @@ body::before {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(20, 53, 115, 0.55);
+  background: rgba(8, 6, 10, 0.8);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 5000;
@@ -325,7 +327,7 @@ body::before {
   max-width: 560px;
   width: 100%;
   position: relative;
-  box-shadow: 0 16px 50px rgba(20, 53, 115, 0.35);
+  box-shadow: 0 16px 50px rgba(8, 6, 10, 0.6);
 }
 .modal-close {
   position: absolute;
@@ -342,9 +344,9 @@ body::before {
 }
 .modal-close:hover { color: var(--gold-bright); }
 .modal-title {
-  font-family: 'Major Mono Display', 'Courier New', monospace;
-  font-size: 1.1rem;
-  letter-spacing: 0.15em;
+  font-family: 'MedievalSharp', 'Cinzel', serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--gold);
   text-align: center;
@@ -364,7 +366,7 @@ body::before {
   gap: 1rem;
 }
 .modal-option {
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(42, 10, 10, 0.85);
   border: 1px solid var(--gold-tarnish);
   padding: 1.3rem 1rem;
   cursor: pointer;
@@ -375,8 +377,8 @@ body::before {
 }
 .modal-option:hover {
   border-color: var(--gold);
-  background: #fff;
-  box-shadow: 0 6px 16px rgba(31, 78, 163, 0.18);
+  background: var(--ink-deep);
+  box-shadow: 0 6px 16px rgba(217, 32, 32, 0.22);
 }
 .modal-option-name {
   font-family: 'Cinzel', serif;
@@ -457,7 +459,7 @@ body::before {
   font-family: 'EB Garamond', serif;
   font-size: 1rem;
   padding: 0.45rem 0.5rem;
-  background: #fff;
+  background: var(--ink-deep);
   border: 1px solid var(--gold-tarnish);
   color: var(--parchment);
   outline: none;
@@ -503,7 +505,7 @@ body::before {
   transition: background 0.2s, border-color 0.2s;
 }
 .modal-cancel:hover {
-  background: rgba(31, 78, 163, 0.08);
+  background: rgba(217, 32, 32, 0.10);
   border-color: var(--gold);
 }
 
@@ -601,7 +603,7 @@ body::before {
   max-height: 220px;
   overflow-y: auto;
   padding: 0.4rem 0.2rem;
-  background: #fff;
+  background: var(--ink-deep);
   border: 1px solid var(--gold-tarnish);
 }
 .spell-picker::-webkit-scrollbar { width: 6px; }
@@ -618,7 +620,7 @@ body::before {
   border: 1px solid transparent;
   transition: background 0.15s, border-color 0.15s;
 }
-.spell-pick:hover { background: rgba(31, 78, 163, 0.06); border-color: var(--gold-tarnish); }
+.spell-pick:hover { background: rgba(217, 32, 32, 0.08); border-color: var(--gold-tarnish); }
 .spell-pick input { margin: 0; cursor: pointer; }
 .spell-pick.disabled { opacity: 0.4; cursor: not-allowed; }
 .spell-pick.disabled:hover { background: transparent; border-color: transparent; }
@@ -654,7 +656,7 @@ body::before {
 .hp-picker label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
 .hp-picker input[type="number"] {
   width: 50px;
-  background: #fff;
+  background: var(--ink-deep);
   border: 1px solid var(--gold-tarnish);
   color: var(--parchment);
   padding: 0.2rem 0.4rem;
@@ -684,7 +686,7 @@ body::before {
   font-family: 'EB Garamond', serif;
   font-size: 0.9rem;
   padding: 0.25rem 0.4rem;
-  background: #fff;
+  background: var(--ink-deep);
   border: 1px solid var(--gold-tarnish);
   color: var(--parchment);
   margin-left: 0.2rem;
@@ -938,7 +940,7 @@ body.dm-mode .magic-card .pip {
   color: var(--parchment-aged);
 }
 .infusion-row.active .infusion-name { color: var(--gold-bright); }
-.infusion-row.active { background: rgba(31, 78, 163, 0.05); }
+.infusion-row.active { background: rgba(217, 32, 32, 0.06); }
 
 .infusion-picker {
   display: grid;
@@ -947,7 +949,7 @@ body.dm-mode .magic-card .pip {
   max-height: 320px;
   overflow-y: auto;
   padding: 0.4rem 0.2rem;
-  background: #fff;
+  background: var(--ink-deep);
   border: 1px solid var(--gold-tarnish);
 }
 .infusion-picker::-webkit-scrollbar { width: 6px; }
@@ -964,7 +966,7 @@ body.dm-mode .magic-card .pip {
   border: 1px solid transparent;
   transition: background 0.15s, border-color 0.15s;
 }
-.infusion-pick:hover { background: rgba(31, 78, 163, 0.06); border-color: var(--gold-tarnish); }
+.infusion-pick:hover { background: rgba(217, 32, 32, 0.08); border-color: var(--gold-tarnish); }
 .infusion-pick input { margin: 0; cursor: pointer; }
 .infusion-pick.disabled { opacity: 0.4; cursor: not-allowed; }
 .infusion-pick.disabled:hover { background: transparent; border-color: transparent; }
@@ -1235,7 +1237,7 @@ body.dm-mode .infusion-row input { pointer-events: none; opacity: 0.5; }
 .mi-field input[type="number"],
 .mi-field select,
 .mi-field textarea {
-  background: #fff;
+  background: var(--ink-deep);
   border: 1px solid var(--gold-tarnish);
   color: var(--parchment);
   font-family: inherit;
@@ -1309,7 +1311,7 @@ body.dm-mode .infusion-row input { pointer-events: none; opacity: 0.5; }
   padding: 0.7rem;
   background: var(--ink-deep);
   border: 1px solid var(--gold);
-  box-shadow: 0 6px 18px rgba(31, 78, 163, 0.25);
+  box-shadow: 0 6px 18px rgba(217, 32, 32, 0.3);
   z-index: 2001;
   min-width: 160px;
 }
@@ -1323,10 +1325,10 @@ body.dm-mode .infusion-row input { pointer-events: none; opacity: 0.5; }
 }
 
 .section-title {
-  font-family: 'Major Mono Display', 'Courier New', monospace;
+  font-family: 'MedievalSharp', 'Cinzel', serif;
   font-weight: 400;
-  font-size: 1.2rem;
-  letter-spacing: 0.18em;
+  font-size: 1.6rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--gold);
   text-align: center;
@@ -1356,7 +1358,7 @@ body.dm-mode .infusion-row input { pointer-events: none; opacity: 0.5; }
 
 .stat-block {
   border: 1px solid var(--gold-tarnish);
-  background: linear-gradient(180deg, rgba(31, 78, 163, 0.04), rgba(255, 255, 255, 0.96));
+  background: linear-gradient(180deg, rgba(217, 32, 32, 0.05), rgba(42, 10, 10, 0.88));
   padding: 1.2rem 0.5rem;
   text-align: center;
   position: relative;
@@ -1387,7 +1389,7 @@ body.dm-mode .infusion-row input { pointer-events: none; opacity: 0.5; }
   margin-top: 1.2rem;
   padding: 0.55rem 1rem;
   border: 1px solid var(--gold-tarnish);
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(42, 10, 10, 0.82);
   font-family: 'Cinzel', serif;
   font-size: 0.8rem;
   letter-spacing: 0.18em;
@@ -1470,7 +1472,7 @@ body.dm-mode .infusion-row input { pointer-events: none; opacity: 0.5; }
   border: 1px solid var(--gold-tarnish);
   padding: 1rem;
   text-align: center;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(42, 10, 10, 0.82);
 }
 
 .defense-cell .label {
@@ -1579,7 +1581,7 @@ body.dm-mode .infusion-row input { pointer-events: none; opacity: 0.5; }
   margin-bottom: 2rem;
   padding: 0.7rem 1.2rem;
   border: 1px solid var(--gold-tarnish);
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(42, 10, 10, 0.85);
 }
 .concentration-label {
   font-family: 'Cinzel', serif;
@@ -1636,7 +1638,7 @@ body.dm-mode .infusion-row input { pointer-events: none; opacity: 0.5; }
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 0.4rem;
-  border-bottom: 1px dotted rgba(31, 78, 163, 0.25);
+  border-bottom: 1px dotted rgba(217, 32, 32, 0.3);
 }
 .resource-row:last-child { border-bottom: none; }
 .resource-row[hidden] { display: none; }
@@ -1690,7 +1692,8 @@ body.dm-mode .infusion-row input { pointer-events: none; opacity: 0.5; }
 .resource-pips .pip.used { background: transparent; }
 .resource-pips .pip:hover { border-color: var(--gold-bright); }
 .resource-readout {
-  font-family: 'Major Mono Display', 'Courier New', monospace;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
   font-size: 1rem;
   letter-spacing: 0.1em;
   color: var(--gold);
@@ -1705,6 +1708,66 @@ body.dm-mode .infusion-row input { pointer-events: none; opacity: 0.5; }
   margin-left: 0.3rem;
 }
 body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: default; }
+
+/* Rage tracker — pips (read-only display) + Enter/End Rage toggle button. */
+.rage-row .rage-controls { display: flex; align-items: center; gap: 0.9rem; }
+.rage-row .resource-pips .pip { cursor: default; }
+.rage-row .resource-pips .pip:hover { border-color: var(--gold); }
+.rage-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--gold-tarnish);
+  background: transparent;
+  color: var(--gold);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+}
+.rage-btn:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--gold-bright);
+  box-shadow: 0 0 8px rgba(217, 32, 32, 0.3);
+}
+.rage-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: var(--gold-tarnish);
+}
+.rage-btn.raging {
+  background: var(--gold);
+  color: var(--ink);
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 12px rgba(255, 58, 58, 0.5), inset 0 0 6px rgba(168, 16, 16, 0.4);
+  animation: rage-pulse 2s ease-in-out infinite;
+}
+.rage-btn.raging:hover { background: var(--gold-bright); box-shadow: 0 0 16px rgba(255, 58, 58, 0.7), inset 0 0 6px rgba(168, 16, 16, 0.4); }
+body.dm-mode .rage-btn { pointer-events: none; opacity: 0.6; cursor: default; }
+@keyframes rage-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(255, 58, 58, 0.5), inset 0 0 6px rgba(168, 16, 16, 0.4); }
+  50%      { box-shadow: 0 0 22px rgba(255, 58, 58, 0.85), inset 0 0 10px rgba(168, 16, 16, 0.55); }
+}
+
+/* Attack Profiles — Reckless Attack toggle row */
+.attack-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.8rem;
+  border: 1px dashed var(--gold-tarnish);
+  margin-bottom: 1rem;
+  background: rgba(42, 10, 10, 0.4);
+}
+.attack-toggle-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
 .resource-toggle {
   font-family: 'Cinzel', serif;
   font-size: 0.7rem;
@@ -1736,7 +1799,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
 .font-of-magic {
   margin: 0.4rem 0 0.6rem;
   padding: 0.6rem 0.4rem;
-  border-top: 1px dotted rgba(31, 78, 163, 0.25);
+  border-top: 1px dotted rgba(217, 32, 32, 0.3);
 }
 .fom-section {
   display: flex;
@@ -1827,7 +1890,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
 .ds-pip.fail { border-color: var(--blood); }
 .ds-pip.checked.success {
   background: var(--gold);
-  box-shadow: 0 0 4px rgba(31, 78, 163, 0.6);
+  box-shadow: 0 0 4px rgba(217, 32, 32, 0.6);
 }
 .ds-pip.checked.fail {
   background: var(--blood-bright);
@@ -1843,7 +1906,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
   margin-top: 1.5rem;
   padding: 0.8rem 1rem;
   border: 1px solid var(--gold-tarnish);
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(42, 10, 10, 0.82);
 }
 .conditions-header {
   display: flex;
@@ -1970,7 +2033,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
 /* CARD */
 .card {
   border: 1px solid var(--gold-tarnish);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(232, 240, 250, 0.85));
+  background: linear-gradient(180deg, rgba(42, 10, 10, 0.86), rgba(8, 6, 10, 0.85));
   padding: 1.8rem;
   position: relative;
 }
@@ -1993,9 +2056,9 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
 }
 
 .card h3 {
-  font-family: 'Cinzel', serif;
-  font-size: 1rem;
-  letter-spacing: 0.2em;
+  font-family: 'MedievalSharp', 'Cinzel', serif;
+  font-size: 1.25rem;
+  letter-spacing: 0.16em;
   color: var(--gold);
   text-transform: uppercase;
   margin-bottom: 1.2rem;
@@ -2058,7 +2121,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
 .card li {
   padding: 0.5rem 0 0.5rem 1.5rem;
   position: relative;
-  border-bottom: 1px dotted rgba(31, 78, 163, 0.2);
+  border-bottom: 1px dotted rgba(217, 32, 32, 0.25);
 }
 .card li:last-child { border-bottom: none; }
 .card li::before {
@@ -2100,7 +2163,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
 
 .spell-table td {
   padding: 0.7rem 0.5rem;
-  border-bottom: 1px dotted rgba(31, 78, 163, 0.2);
+  border-bottom: 1px dotted rgba(217, 32, 32, 0.25);
   vertical-align: top;
 }
 
@@ -2160,12 +2223,12 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
   color: var(--gold);
   padding: 0.5rem 1rem;
   border: 1px solid var(--gold-tarnish);
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(42, 10, 10, 0.85);
   text-align: center;
   transition: background 0.3s;
   user-select: none;
 }
-.surge-details summary:hover { background: rgba(31, 78, 163, 0.1); }
+.surge-details summary:hover { background: rgba(217, 32, 32, 0.12); }
 .surge-details summary::-webkit-details-marker { display: none; }
 .surge-details summary::before {
   content: '+ ';
@@ -2192,7 +2255,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
 }
 .surge-table td {
   padding: 0.55rem 0.6rem;
-  border-bottom: 1px dotted rgba(31, 78, 163, 0.18);
+  border-bottom: 1px dotted rgba(217, 32, 32, 0.22);
   vertical-align: top;
   color: var(--parchment-aged);
 }
@@ -2203,7 +2266,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
   white-space: nowrap;
 }
 .surge-table tr.hit td {
-  background: rgba(31, 78, 163, 0.12);
+  background: rgba(217, 32, 32, 0.15);
   color: var(--parchment);
 }
 .surge-table tr.hit .surge-range {
@@ -2271,9 +2334,9 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
   min-width: 200px;
   max-width: 280px;
   padding: 0.6rem;
-  background: #fff;
+  background: var(--ink-deep);
   border: 1px solid var(--gold);
-  box-shadow: 0 6px 18px rgba(31, 78, 163, 0.25);
+  box-shadow: 0 6px 18px rgba(217, 32, 32, 0.3);
   font-family: 'EB Garamond', serif;
   color: var(--parchment);
 }
@@ -2306,7 +2369,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
   transition: background 0.2s, border-color 0.2s;
 }
 .cast-popover-option:hover {
-  background: rgba(31, 78, 163, 0.15);
+  background: rgba(217, 32, 32, 0.18);
   border-color: var(--gold);
 }
 .cast-popover-option .tier-count {
@@ -2343,7 +2406,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
   align-items: center;
   gap: 1rem;
   padding: 0.6rem 0;
-  border-bottom: 1px dotted rgba(31, 78, 163, 0.2);
+  border-bottom: 1px dotted rgba(217, 32, 32, 0.25);
   flex-wrap: wrap;
 }
 .slot-row:last-child { border-bottom: none; }
@@ -2391,7 +2454,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
   display: flex;
   justify-content: space-between;
   padding: 0.3rem 0;
-  border-bottom: 1px dotted rgba(31, 78, 163, 0.15);
+  border-bottom: 1px dotted rgba(217, 32, 32, 0.18);
 }
 
 .skill-row.proficient .skill-name { color: var(--parchment); }
@@ -2517,7 +2580,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
   align-items: flex-start;
   gap: 0.6rem;
   padding: 0.5rem 0;
-  border-bottom: 1px dotted rgba(31, 78, 163, 0.2);
+  border-bottom: 1px dotted rgba(217, 32, 32, 0.25);
   position: relative;
 }
 .inv-item::before { display: none !important; }
@@ -2574,14 +2637,14 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
 .add-btn:hover {
   border-color: var(--gold);
   color: var(--gold-bright);
-  background: rgba(31, 78, 163, 0.05);
+  background: rgba(217, 32, 32, 0.06);
 }
 
 /* NOTES */
 .notes-area {
   width: 100%;
   min-height: 120px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(42, 10, 10, 0.82);
   border: 1px solid var(--gold-tarnish);
   color: var(--parchment);
   font-family: 'EB Garamond', serif;
@@ -2598,7 +2661,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
 .alt-control {
   margin-top: 1rem;
   padding: 1rem;
-  background: rgba(31, 78, 163, 0.05);
+  background: rgba(217, 32, 32, 0.06);
   border-left: 2px solid var(--gold);
 }
 
@@ -2685,7 +2748,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
 }
 .level-table td {
   padding: 0.5rem;
-  border-bottom: 1px dotted rgba(31, 78, 163, 0.2);
+  border-bottom: 1px dotted rgba(217, 32, 32, 0.25);
   font-size: 0.95rem;
 }
 .level-table tr.current {
@@ -2720,7 +2783,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
   font-size: 0.65rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(42, 10, 10, 0.88);
   border: 1px solid var(--gold);
   padding: 0.45rem 0.85rem;
   pointer-events: none;
@@ -2729,7 +2792,7 @@ body.dm-mode .resource-pips .pip { pointer-events: none; opacity: 0.6; cursor: d
   flex-direction: column;
   gap: 0.15rem;
   align-items: flex-end;
-  box-shadow: 0 2px 10px rgba(31, 78, 163, 0.15);
+  box-shadow: 0 2px 10px rgba(217, 32, 32, 0.18);
 }
 .save-line {
   opacity: 0;
@@ -2816,14 +2879,14 @@ body.dm-mode .dm-hide { display: none; }
   color: var(--gold);
   padding: 0.7rem 1.2rem;
   border: 1px solid var(--gold-tarnish);
-  background: rgba(255, 255, 255, 0.90);
+  background: rgba(42, 10, 10, 0.82);
   text-align: center;
   font-size: 0.78rem;
   transition: background 0.3s, border-color 0.3s;
   user-select: none;
 }
 .backstory-details summary:hover {
-  background: rgba(31, 78, 163, 0.1);
+  background: rgba(217, 32, 32, 0.12);
   border-color: var(--gold);
 }
 .backstory-details summary::-webkit-details-marker { display: none; }
@@ -3762,6 +3825,8 @@ const FEATS = [
   { name: 'Crafter',         category: 'Origin',  minLevel: 1, effect: 'Proficiency with 3 Artisan\'s Tools. Crafted nonmagical gear costs 20% less. 7-day downtime: scribe a Spell Scroll or craft mundane gear.' },
   { name: 'Healer',          category: 'Origin',  minLevel: 1, effect: 'Action with a Healer\'s Kit: restore 1d10 + prof bonus HP to a creature. Stabilize a dying creature.' },
   { name: 'Lucky',           category: 'Origin',  minLevel: 1, effect: '3 Luck Points per long rest. Reroll an attack/save/check, or force an enemy attacker to reroll.' },
+  { name: 'Magic Initiate (Cleric)', category: 'Origin', minLevel: 1, effect: 'Learn 2 Cleric cantrips + 1 first-level Cleric spell (cast once/long rest). Use WIS.' },
+  { name: 'Magic Initiate (Druid)',  category: 'Origin', minLevel: 1, effect: 'Learn 2 Druid cantrips + 1 first-level Druid spell (cast once/long rest). Use WIS.' },
   { name: 'Magic Initiate (Wizard)', category: 'Origin', minLevel: 1, effect: 'Learn 2 Wizard cantrips + 1 first-level Wizard spell (cast once/long rest). Use INT.' },
   { name: 'Musician',        category: 'Origin',  minLevel: 1, effect: 'Proficiency with 3 musical instruments. After a short/long rest, grant Heroic Inspiration to allies who heard you play (up to prof bonus).' },
   { name: 'Savage Attacker', category: 'Origin',  minLevel: 1, effect: 'Once per turn, reroll the damage dice of a weapon attack and use either result.' },
@@ -4066,9 +4131,24 @@ const CLASS_DATA = {
     isHalfCaster: false,
     subclasses: ['Path of the Berserker', 'Path of the Giant', 'Path of the Wild Heart', 'Path of the World Tree', 'Path of the Zealot'],
     subclassData: {
+      // DM-approved port of the Bigby Presents: Glory of the Giants subclass.
+      // Not in the 2024 PHB; locked in by table ruling.
       'Path of the Giant': {
-        // Populated in Phase 2 with Giant's Might, Elemental Cleaver, Mighty Impel, Demiurgic Colossus.
-        perLevel: {}
+        perLevel: {
+          3: [
+            { name: "Giant's Power", desc: "You learn to speak, read, and write Giant (or another language of your choice if you already know Giant). You also learn one cantrip — druidcraft OR thaumaturgy. WIS is your spellcasting ability for it." },
+            { name: "Giant's Havoc", desc: "While raging, gain two benefits — Crushing Throw: when you hit with a ranged attack using a thrown STR weapon, add your Rage Damage bonus to the damage. Giant Stature: your reach increases by 5 ft and you become Large (if smaller than Large), along with your gear. If there isn't room to grow, your size doesn't change." }
+          ],
+          6: [
+            { name: 'Elemental Cleaver', desc: "When you enter your rage, choose one weapon you're holding and infuse it with acid, cold, fire, thunder, or lightning. While you wield the infused weapon during your rage, its damage type becomes the chosen type, it deals +1d6 of that type on hit, and it gains the Thrown property (range 20/60). If thrown, it reappears in your hand the instant after it hits or misses. Bonus Action while raging + holding the infused weapon: switch the damage type to another from the list. Suppressed if another creature wields the weapon." }
+          ],
+          10: [
+            { name: 'Mighty Impel', desc: "Bonus Action while raging: pick one Medium or smaller creature within your reach and move it to an unoccupied space you can see within 30 ft. An unwilling target must succeed on a STR save (DC = 8 + PB + STR mod) to avoid the effect. If the destination can't support the creature, it falls (normal falling damage, lands prone)." }
+          ],
+          14: [
+            { name: 'Demiurgic Colossus', desc: "When you rage, your reach now increases by 10 ft (instead of 5), you can choose to become Large or Huge, and Mighty Impel can target Large-or-smaller creatures. Your Elemental Cleaver extra damage increases to 2d6." }
+          ]
+        }
       }
     },
     // Per-class-level progression. Each entry:
@@ -4079,94 +4159,96 @@ const CLASS_DATA = {
     //   rageDamage: STR-melee bonus while raging
     perLevel: [
       null,
-      // L1
+      // L1 — Rage / Unarmored Defense / Weapon Mastery (2)
       { features: [
-          { name: 'Rage', desc: 'Bonus Action: enter Rage for 1 minute. While raging (Heavy armor not worn): Rage Damage bonus on Strength-based melee attacks, Advantage on Strength checks and saves, Resistance to bludgeoning/piercing/slashing. Rage ends if you don\'t attack a hostile or take damage on a turn. Rages: 2/Long Rest at L1.' },
-          { name: 'Unarmored Defense', desc: 'When not wearing armor, AC = 10 + DEX mod + CON mod. Shield allowed.' },
-          { name: 'Weapon Mastery', desc: 'Gain the Mastery property of 2 weapons of your choice. Swap on a Long Rest.' }
+          { name: 'Rage', desc: 'Bonus Action: enter Rage if not wearing Heavy armor. Lasts until the end of your next turn; extend each round by making an attack roll, forcing a saving throw, or spending another Bonus Action. Maximum 10 minutes. Rage benefits: Resistance to bludgeoning/piercing/slashing damage; Rage Damage bonus on STR-based attacks (weapon or unarmed); Advantage on Strength checks and saves. You can\'t cast spells or maintain Concentration while raging. Recover 1 expended use on a Short Rest, all on a Long Rest.' },
+          { name: 'Unarmored Defense', desc: 'While not wearing armor, AC = 10 + DEX mod + CON mod. Shield allowed.' },
+          { name: 'Weapon Mastery', desc: 'Gain the Mastery property of 2 Simple or Martial Melee weapons of your choice. Swap one on a Long Rest.' }
         ], rages: 2, rageDamage: 2, weaponMastery: 2 },
-      // L2
+      // L2 — Danger Sense / Reckless Attack
       { features: [
-          { name: 'Reckless Attack', desc: 'When you make your first attack on your turn, you can attack recklessly: Advantage on STR-based attack rolls this turn, but attack rolls against you have Advantage until your next turn.' },
-          { name: 'Danger Sense', desc: 'Advantage on Dexterity saving throws against effects you can see (not Incapacitated, not Restrained).' }
+          { name: 'Danger Sense', desc: 'Advantage on Dexterity saving throws against effects you can see, unless you have the Incapacitated condition.' },
+          { name: 'Reckless Attack', desc: 'When you make your first attack roll on your turn, decide to attack recklessly: Advantage on STR-based attack rolls until the start of your next turn, but attack rolls against you have Advantage during that time.' }
         ], rages: 2, rageDamage: 2 },
-      // L3
+      // L3 — Barbarian Subclass / Primal Knowledge
       { features: [
-          { name: 'Primal Knowledge', desc: 'Gain proficiency in one Barbarian-list skill of your choice. Once per turn while raging, you may make a Strength check using one of these skills with Advantage: Acrobatics, Intimidation, Perception, Stealth, or Survival.' },
-          { name: 'Primal Path', desc: 'Pick a Barbarian subclass — gain its level 3 features.' }
+          { name: 'Barbarian Subclass', desc: 'Choose a Path of the Berserker, Wild Heart, World Tree, or Zealot. Gain its level 3 features (additional features at levels 6, 10, and 14).' },
+          { name: 'Primal Knowledge', desc: 'Gain proficiency in another skill from the Barbarian skill list. While raging, you may make an ability check in Acrobatics, Intimidation, Perception, Stealth, or Survival as a STRENGTH check even if it normally uses a different ability.' }
         ], rages: 3, rageDamage: 2, subclassPick: true },
-      // L4
+      // L4 — ASI / +1 Weapon Mastery (3 total)
       { features: [
-          { name: 'Ability Score Improvement', desc: 'ASI or Feat of your choice.' }
-        ], rages: 3, rageDamage: 2, asi: true },
-      // L5
+          { name: 'Ability Score Improvement', desc: 'Gain the Ability Score Improvement feat (or another feat you qualify for). Gained again at 8, 12, 16.' },
+          { name: 'Weapon Mastery (3)', desc: 'You now know the Mastery property of 3 weapons total.' }
+        ], rages: 3, rageDamage: 2, weaponMastery: 3, asi: true },
+      // L5 — Extra Attack / Fast Movement
       { features: [
-          { name: 'Extra Attack', desc: 'You can attack twice instead of once when you take the Attack action.' },
-          { name: 'Fast Movement', desc: '+10 ft Speed when not wearing Heavy armor.' }
-        ], rages: 3, rageDamage: 2 },
-      // L6
+          { name: 'Extra Attack', desc: 'You can attack twice, instead of once, when you take the Attack action on your turn.' },
+          { name: 'Fast Movement', desc: 'Your Speed increases by 10 feet while not wearing Heavy armor.' }
+        ], rages: 3, rageDamage: 2, weaponMastery: 3 },
+      // L6 — Subclass feature
       { features: [
           { name: 'Subclass Feature', desc: 'See your Primal Path entry for its level 6 feature.' }
-        ], rages: 4, rageDamage: 2 },
-      // L7
+        ], rages: 4, rageDamage: 2, weaponMastery: 3 },
+      // L7 — Feral Instinct / Instinctive Pounce
       { features: [
-          { name: 'Feral Instinct', desc: 'Advantage on Initiative rolls. If you\'re Surprised at the start of combat and not Incapacitated, you can act normally on your first turn — but only if you enter Rage as the first action.' },
-          { name: 'Instinctive Pounce', desc: 'As part of the Bonus Action used to enter Rage, you can move up to half your Speed.' }
-        ], rages: 4, rageDamage: 2 },
-      // L8
+          { name: 'Feral Instinct', desc: 'Your instincts are so honed that you have Advantage on Initiative rolls.' },
+          { name: 'Instinctive Pounce', desc: 'As part of the Bonus Action you take to enter your Rage, you can move up to half your Speed.' }
+        ], rages: 4, rageDamage: 2, weaponMastery: 3 },
+      // L8 — ASI
       { features: [
           { name: 'Ability Score Improvement', desc: 'ASI or Feat of your choice.' }
-        ], rages: 4, rageDamage: 2, asi: true },
-      // L9
+        ], rages: 4, rageDamage: 2, weaponMastery: 3, asi: true },
+      // L9 — Brutal Strike / Rage Damage +3
       { features: [
-          { name: 'Brutal Strike', desc: 'When you use Reckless Attack, you can forgo the Advantage to instead deal +1d10 damage on a hit AND apply one Brutal Strike effect: Forceful Blow (push 15 ft + move with target) OR Hamstring Blow (Speed −15 ft until your next turn). Usable when you Reckless Attack.' },
+          { name: 'Brutal Strike', desc: 'When you use Reckless Attack, you can forgo the Advantage on one Strength-based attack roll (the roll must not have Disadvantage). If that attack hits, the target takes an extra 1d10 damage of the weapon\'s type AND you apply one Brutal Strike effect: Forceful Blow (push 15 ft, then move up to half your Speed toward target without provoking Opportunity Attacks) OR Hamstring Blow (target\'s Speed −15 ft until the start of your next turn; one Hamstring Blow at a time).' },
           { name: 'Rage Damage +3', desc: 'Your Rage Damage bonus increases to +3.' }
-        ], rages: 4, rageDamage: 3 },
-      // L10
+        ], rages: 4, rageDamage: 3, weaponMastery: 3 },
+      // L10 — Subclass feature / +1 Weapon Mastery (4 total)
       { features: [
-          { name: 'Subclass Feature', desc: 'See your Primal Path entry for its level 10 feature.' }
-        ], rages: 4, rageDamage: 3 },
-      // L11
+          { name: 'Subclass Feature', desc: 'See your Primal Path entry for its level 10 feature.' },
+          { name: 'Weapon Mastery (4)', desc: 'You now know the Mastery property of 4 weapons total.' }
+        ], rages: 4, rageDamage: 3, weaponMastery: 4 },
+      // L11 — Relentless Rage
       { features: [
-          { name: 'Relentless Rage', desc: 'When raging and dropped to 0 HP (not killed outright), make a CON save (DC 10) to drop to 1 HP instead. DC +5 each subsequent use; resets on a Short or Long Rest.' }
-        ], rages: 4, rageDamage: 3 },
-      // L12
+          { name: 'Relentless Rage', desc: 'If you drop to 0 HP while raging and don\'t die outright, you can make a DC 10 CON save. On a success, your HP changes to a number equal to TWICE your Barbarian level. Each subsequent use raises the DC by 5; DC resets to 10 on a Short or Long Rest.' }
+        ], rages: 4, rageDamage: 3, weaponMastery: 4 },
+      // L12 — ASI
       { features: [
           { name: 'Ability Score Improvement', desc: 'ASI or Feat of your choice.' }
-        ], rages: 5, rageDamage: 3, asi: true },
-      // L13
+        ], rages: 5, rageDamage: 3, weaponMastery: 4, asi: true },
+      // L13 — Improved Brutal Strike (Staggering / Sundering)
       { features: [
-          { name: 'Improved Brutal Strike', desc: 'Gain two more Brutal Strike options: Staggering Blow (target has Disadvantage on attacks and can\'t take Reactions until end of your next turn) and Sundering Blow (next attack against target before your next turn has +1d10 damage).' }
-        ], rages: 5, rageDamage: 3 },
-      // L14
+          { name: 'Improved Brutal Strike', desc: 'Two new Brutal Strike options: Staggering Blow (target has Disadvantage on its next saving throw and can\'t make Opportunity Attacks until the start of your next turn); Sundering Blow (before the start of your next turn, the next attack roll made by another creature against the target gains a +5 bonus to the roll — one Sundering Blow bonus at a time).' }
+        ], rages: 5, rageDamage: 3, weaponMastery: 4 },
+      // L14 — Subclass feature
       { features: [
           { name: 'Subclass Feature', desc: 'See your Primal Path entry for its level 14 feature.' }
-        ], rages: 5, rageDamage: 3 },
-      // L15
+        ], rages: 5, rageDamage: 3, weaponMastery: 4 },
+      // L15 — Persistent Rage
       { features: [
-          { name: 'Persistent Rage', desc: 'Rage lasts 10 minutes. Ends only if you fall Unconscious or choose to end it.' }
-        ], rages: 5, rageDamage: 3 },
-      // L16
+          { name: 'Persistent Rage', desc: 'When you roll Initiative, you can regain all expended uses of Rage (once per Long Rest). Your Rage now lasts 10 minutes without needing to be extended each round; ends early only if you become Unconscious or don Heavy armor.' }
+        ], rages: 5, rageDamage: 3, weaponMastery: 4 },
+      // L16 — ASI
       { features: [
           { name: 'Ability Score Improvement', desc: 'ASI or Feat of your choice.' }
-        ], rages: 5, rageDamage: 3, asi: true },
-      // L17
+        ], rages: 5, rageDamage: 3, weaponMastery: 4, asi: true },
+      // L17 — Improved Brutal Strike (2d10 + two effects) / Rage Damage +4
       { features: [
-          { name: 'Brutal Strike Improvement', desc: 'Brutal Strike damage increases to +2d10. Apply two Brutal Strike effects per hit instead of one.' },
+          { name: 'Improved Brutal Strike (2d10)', desc: 'Your Brutal Strike extra damage increases to 2d10. You can apply two different Brutal Strike effects whenever you use the feature.' },
           { name: 'Rage Damage +4', desc: 'Your Rage Damage bonus increases to +4.' }
-        ], rages: 6, rageDamage: 4 },
-      // L18
+        ], rages: 6, rageDamage: 4, weaponMastery: 4 },
+      // L18 — Indomitable Might
       { features: [
-          { name: 'Indomitable Might', desc: 'If your total for a Strength check is less than your Strength score, use your Strength score in place of the total.' }
-        ], rages: 6, rageDamage: 4 },
-      // L19
+          { name: 'Indomitable Might', desc: 'If your total for a Strength check or Strength saving throw is less than your Strength score, you can use your Strength score in place of the total.' }
+        ], rages: 6, rageDamage: 4, weaponMastery: 4 },
+      // L19 — Epic Boon
       { features: [
-          { name: 'Epic Boon', desc: 'Gain an Epic Boon feat (Boon of Irresistible Offense recommended for melee builds).' }
-        ], rages: 6, rageDamage: 4, asi: true },
-      // L20
+          { name: 'Epic Boon', desc: 'Gain an Epic Boon feat or another feat of your choice for which you qualify. Boon of Irresistible Offense is recommended.' }
+        ], rages: 6, rageDamage: 4, weaponMastery: 4, asi: true },
+      // L20 — Primal Champion
       { features: [
-          { name: 'Primal Champion', desc: 'Your Strength and Constitution scores increase by 4. Your maximum for those scores increases to 25.' }
-        ], rages: 99, rageDamage: 4 } // 99 = unlimited at L20 per 2024 rules
+          { name: 'Primal Champion', desc: 'You embody primal power. Your Strength and Constitution scores increase by 4, to a maximum of 25.' }
+        ], rages: 6, rageDamage: 4, weaponMastery: 4 }
     ]
   },
   warlock: {
@@ -4384,7 +4466,11 @@ const DEFAULT_STATE = {
   //   chargesMax, chargesUsed, notes }
   magicItems: [],
   // Goliath Giant Ancestry pick (default Fire per Kano's backstory; swappable)
-  giantAncestry: 'Fire'
+  giantAncestry: 'Fire',
+  // Barbarian Rage tracking
+  ragesUsed: 0,              // count of rages spent this Long Rest
+  rageActive: false,         // currently raging right now
+  recklessAttackOn: false    // Reckless Attack toggled on for current turn
 };
 
 let state = loadState();
@@ -4801,11 +4887,40 @@ function renderCombatResources(level) {
   inspBtn.textContent = state.heroicInspiration ? 'Available' : 'None';
   inspBtn.classList.toggle('used', !state.heroicInspiration);
 
-  const { a, r } = classBreakdown(level);
+  const { a, r, b, w } = classBreakdown(level);
   const stats = computeStats(level);
   const intMod = mod(stats.int);
   const dynRows = document.getElementById('combat-resources-dynamic');
   dynRows.innerHTML = '';
+
+  // ---- Rage ---- (Barbarian L1+, Long Rest refill, Short Rest refunds 1)
+  if (b >= 1) {
+    const barbData = CLASS_DATA.barbarian.perLevel[b];
+    const ragesMax = barbData.rages;
+    const ragesUsed = Math.min(state.ragesUsed || 0, ragesMax);
+    const ragesAvailable = ragesMax - ragesUsed;
+    const rageDamage = barbData.rageDamage;
+    const isActive = !!state.rageActive;
+    const row = document.createElement('div');
+    row.className = 'resource-row rage-row';
+    const tipText = `Bonus Action: enter Rage (if not in Heavy armor). While raging: +${rageDamage} Rage Damage on STR attacks, Advantage on STR checks/saves, Resistance to B/P/S damage. Lasts until end of next turn — extend each round by attacking, forcing a save, or spending a Bonus Action. Max 10 minutes. Can't cast or maintain Concentration while raging. ${ragesMax} use${ragesMax > 1 ? 's' : ''} per Long Rest; Short Rest refunds 1.`;
+    row.innerHTML = `
+      <span class="resource-label has-tip" title="${tipText}">Rage <span class="resource-meta">+${rageDamage} dmg${isActive ? ' · RAGING' : ''}</span></span>
+      <div class="rage-controls">
+        <div class="resource-pips" data-resource="rage"></div>
+        <button class="rage-btn ${isActive ? 'raging' : ''}" id="rage-toggle-btn"${ragesAvailable === 0 && !isActive ? ' disabled' : ''}>${isActive ? 'End Rage' : 'Enter Rage'}</button>
+      </div>
+    `;
+    const pipsBox = row.querySelector('.resource-pips');
+    for (let i = 0; i < ragesMax; i++) {
+      const pip = document.createElement('div');
+      pip.className = 'pip' + (i >= ragesAvailable ? ' used' : '');
+      pip.title = `Rage use ${i + 1}`;
+      pipsBox.appendChild(pip);
+    }
+    row.querySelector('#rage-toggle-btn').addEventListener('click', () => toggleRage(ragesMax));
+    dynRows.appendChild(row);
+  }
 
   // ---- Hit Dice ---- (both classes are d8; pool = character level)
   if (level > 0) {
@@ -4934,6 +5049,30 @@ function toggleHitDie(index, max) {
   const used = state.hitDiceUsed || 0;
   const isAvailable = index < (max - used);
   state.hitDiceUsed = isAvailable ? (max - index) : (max - index - 1);
+  saveState();
+  render();
+}
+
+// Rage button: Enter Rage spends a pip + flips active; End Rage just flips active off (no pip refund).
+function toggleRage(ragesMax) {
+  const used = state.ragesUsed || 0;
+  if (state.rageActive) {
+    // End Rage — no pip refund
+    state.rageActive = false;
+    state.recklessAttackOn = false; // Reckless implicitly ends with Rage
+  } else {
+    // Enter Rage — must have an available pip
+    if (used >= ragesMax) return;
+    state.ragesUsed = used + 1;
+    state.rageActive = true;
+  }
+  saveState();
+  render();
+}
+
+// Reckless Attack toggle (Barbarian L2+, in-combat flag)
+function toggleReckless() {
+  state.recklessAttackOn = !state.recklessAttackOn;
   saveState();
   render();
 }
@@ -5501,59 +5640,34 @@ function weaponAbilityForRoll(weapon, stats) {
 
 function renderAttackProfilesCard(level) {
   const card = document.getElementById('attack-profiles-card');
-  const { a, r } = classBreakdown(level);
+  const { b, w } = classBreakdown(level);
   const stats = computeStats(level);
   const pb = profBonus(level);
 
   const profiles = [];
+  const isRaging = !!state.rageActive;
+  const rageBonus = (isRaging && b >= 1) ? CLASS_DATA.barbarian.perLevel[b].rageDamage : 0;
+  const extraAttack = b >= 5;
 
-  // Armor Model special weapon (Armorer L3+, INT to hit + damage)
-  if (a >= 3) {
-    const sub = findChosenSubclass('artificer');
-    const model = sub === 'Armorer' ? findArmorModel() : null;
-    const intMod = mod(stats.int);
-    if (model === 'Dreadnaught') {
-      const dieAt15 = a >= 15 ? '2d6' : '1d10';
-      profiles.push({
-        name: 'Force Demolisher', subtitle: 'Armor Model · Dreadnaught',
-        attack: pb + intMod + (a >= 9 ? 1 : 0),
-        damage: `${dieAt15} + ${intMod}${a >= 9 ? ' + 1' : ''} force`,
-        extra: 'Reach. Push/pull 10 ft (smaller creatures).',
-        ability: `INT (Arcane Armor)`
-      });
-    } else if (model === 'Guardian') {
-      const dieAt15 = a >= 15 ? '1d10' : '1d8';
-      profiles.push({
-        name: 'Thunder Pulse', subtitle: 'Armor Model · Guardian',
-        attack: pb + intMod + (a >= 9 ? 1 : 0),
-        damage: `${dieAt15} + ${intMod}${a >= 9 ? ' + 1' : ''} thunder`,
-        extra: 'Target has Disadvantage on attacks vs anyone but you until your next turn.',
-        ability: `INT (Arcane Armor)`
-      });
-    } else if (model === 'Infiltrator') {
-      const dieAt15 = a >= 15 ? '2d6' : '1d6';
-      profiles.push({
-        name: 'Lightning Launcher', subtitle: 'Armor Model · Infiltrator',
-        attack: pb + intMod + (a >= 9 ? 1 : 0),
-        damage: `${dieAt15} + ${intMod}${a >= 9 ? ' + 1' : ''} lightning · +1d6 lightning once/turn on hit`,
-        extra: 'Range 90/300 ft.',
-        ability: `INT (Arcane Armor)`
-      });
-    }
-  }
-
-  // Each weapon mastery she's picked
+  // Each weapon mastery picked — auto-builds an attack profile per weapon
   for (const name of state.weaponMasteries || []) {
-    const w = WEAPONS_DATA.find(x => x.name === name);
-    if (!w) continue;
-    const ability = weaponAbilityForRoll(w, stats);
+    const wpn = WEAPONS_DATA.find(x => x.name === name);
+    if (!wpn) continue;
+    const ability = weaponAbilityForRoll(wpn, stats);
     const abilityMod = mod(stats[ability]);
+    const isStrAttack = ability === 'str';
+    const rageBonusOnThis = (isRaging && isStrAttack) ? rageBonus : 0;
+    const damageDie = wpn.damage.split(' ')[0];
+    const damageType = wpn.damage.split(' ')[1] === 'B' ? 'bludgeoning'
+                     : wpn.damage.split(' ')[1] === 'P' ? 'piercing' : 'slashing';
+    const damageStr = `${damageDie} + ${abilityMod}${rageBonusOnThis > 0 ? ` + ${rageBonusOnThis} (Rage)` : ''} ${damageType}`;
     profiles.push({
-      name: w.name, subtitle: `Mastery · ${w.mastery}`,
+      name: wpn.name,
+      subtitle: `Mastery · ${wpn.mastery}${isStrAttack && isRaging ? ' · RAGING' : ''}`,
       attack: pb + abilityMod,
-      damage: `${w.damage.split(' ')[0]} + ${abilityMod} ${w.damage.split(' ')[1] === 'B' ? 'bludgeoning' : w.damage.split(' ')[1] === 'P' ? 'piercing' : 'slashing'}`,
-      extra: `${w.properties} · ${MASTERY_DESCRIPTIONS[w.mastery] || ''}`,
-      ability: ability.toUpperCase()
+      damage: damageStr,
+      extra: `${wpn.properties} · ${MASTERY_DESCRIPTIONS[wpn.mastery] || ''}`,
+      ability: ability.toUpperCase() + (isStrAttack && isRaging ? ' · +' + rageBonus + ' Rage' : '')
     });
   }
 
@@ -5563,25 +5677,36 @@ function renderAttackProfilesCard(level) {
   }
   card.hidden = false;
 
-  // Sneak Attack note appended once
-  let sneakNote = '';
-  if (r >= 1) {
-    const rogueData = CLASS_DATA.rogue.perLevel[r];
-    if (rogueData && rogueData.sneakAttack) {
-      sneakNote = `Sneak Attack: <strong>+${rogueData.sneakAttack}d6</strong> once per turn — requires Finesse or Ranged weapon AND (Advantage on the attack, OR an enemy of the target is within 5 ft of it).`;
-    }
-  }
-  document.getElementById('attack-profiles-blurb').innerHTML =
-    `Proficiency: <strong>+${pb}</strong>. ${sneakNote}`;
+  // Blurb: prof bonus + Extra Attack note + Reckless Attack toggle (Barb 2+)
+  const blurbParts = [`Proficiency: <strong>+${pb}</strong>`];
+  if (extraAttack) blurbParts.push(`<strong>Extra Attack</strong> (attack twice per Attack action)`);
+  if (b >= 1) blurbParts.push(isRaging
+    ? `<strong style="color: var(--gold-bright);">Raging</strong> — +${rageBonus} damage on STR attacks, Resistance to B/P/S, Advantage on STR checks/saves`
+    : `<em>Not raging.</em> Enter Rage in Combat Resources.`);
+  document.getElementById('attack-profiles-blurb').innerHTML = blurbParts.join(' · ');
 
   const list = document.getElementById('attack-profiles-list');
   list.innerHTML = '';
+
+  // Reckless Attack toggle (Barb L2+)
+  if (b >= 2) {
+    const reckless = !!state.recklessAttackOn;
+    const recklessRow = document.createElement('div');
+    recklessRow.className = 'attack-toggle-row';
+    recklessRow.innerHTML = `
+      <div class="attack-toggle-label has-tip" title="When you make your first attack on your turn: Advantage on STR-based attack rolls until the start of your next turn, but attack rolls against you also have Advantage during that time.">Reckless Attack</div>
+      <button class="rage-btn ${reckless ? 'raging' : ''}" id="reckless-toggle-btn">${reckless ? 'ON · Adv both ways' : 'OFF'}</button>
+    `;
+    recklessRow.querySelector('#reckless-toggle-btn').addEventListener('click', toggleReckless);
+    list.appendChild(recklessRow);
+  }
+
   for (const p of profiles) {
     const block = document.createElement('div');
     block.className = 'feat-block';
     block.innerHTML = `
       <h4>${p.name}<span class="feat-lvl">${p.subtitle}</span></h4>
-      <p style="font-family:'Major Mono Display','Courier New',monospace; color:var(--gold); letter-spacing:0.05em; margin-bottom:0.3rem;">
+      <p style="font-family:'Cinzel',serif; font-weight:700; color:var(--gold); letter-spacing:0.05em; margin-bottom:0.3rem;">
         ${fmtMod(p.attack)} to hit · ${p.damage}
         <span style="font-family:'Cinzel',serif; font-size:0.7rem; color:var(--gold-tarnish); letter-spacing:0.1em; margin-left:0.5rem;">${p.ability}</span>
       </p>
@@ -6570,7 +6695,7 @@ function buildAsiFeatPickerHTML(klass, classLevel) {
   if (isOriginPick) {
     // At character level 1 we pick the Origin Feat (no ASI option)
     return `<div class="modal-prompt">
-      <div class="modal-prompt-label">Origin Feat (from "The Toymaker's Mistake" background)</div>
+      <div class="modal-prompt-label">Origin Feat (from Giant Foundling background)</div>
       <select id="origin-feat-select">
         ${originFeats.map((f, i) => `<option value="${f.name}"${i === 0 ? ' selected' : ''}>${f.name}${f.asi ? ' (+1 ' + Object.keys(f.asi).join('/').toUpperCase() + ')' : ''}</option>`).join('')}
       </select>
@@ -7883,20 +8008,17 @@ document.addEventListener('keydown', (e) => {
 });
 
 document.getElementById('short-rest-btn').addEventListener('click', () => {
-  const { a, r } = classBreakdown(state.level);
-  const recoversFog = a >= 14 && (state.flashOfGeniusUsed || 0) > 0;
-  const recoversStroke = r >= 20 && (state.strokeOfLuckUsed || 0) > 0;
+  const { a, r, b, w } = classBreakdown(state.level);
+  const recoversRage = b >= 1 && (state.ragesUsed || 0) > 0;
   const items = [];
-  if (recoversFog) items.push('Refund 1 Flash of Genius use (Refreshed Genius)');
-  if (recoversStroke) items.push('Refund Stroke of Luck');
+  if (recoversRage) items.push('Refund 1 expended Rage use');
   items.push('Spend Hit Dice manually after — a short rest doesn\'t auto-heal');
   const body = `
     <p>This will:</p>
     <ul>${items.map(i => `<li>${i}</li>`).join('')}</ul>
   `;
   showConfirm('Take a Short Rest?', body, () => {
-    if (recoversFog) state.flashOfGeniusUsed = Math.max(0, state.flashOfGeniusUsed - 1);
-    if (recoversStroke) state.strokeOfLuckUsed = 0;
+    if (recoversRage) state.ragesUsed = Math.max(0, state.ragesUsed - 1);
     saveState();
     render();
   }, { okLabel: 'Short Rest' });
@@ -7904,19 +8026,14 @@ document.getElementById('short-rest-btn').addEventListener('click', () => {
 
 document.getElementById('long-rest-btn').addEventListener('click', () => {
   const hdRecover = Math.max(1, Math.floor(state.level / 2));
-  const { a, r } = classBreakdown(state.level);
+  const { b, w } = classBreakdown(state.level);
   const items = [
     'Restore HP to max and clear Temp HP',
-    'Refill all spell slots',
     `Refund up to ${hdRecover} Hit Dice (half character level, min 1)`
   ];
-  if (a >= 1) items.push('Refill Tinker\'s Magic uses');
-  if (a >= 7) items.push('Refill Flash of Genius uses');
-  const armorModel = a >= 3 ? findArmorModel() : null;
-  if (a >= 3 && armorModel === 'Dreadnaught') items.push('Refill Giant Stature uses');
-  if (a >= 15 && armorModel === 'Infiltrator') items.push('Refill Infiltrator Fly uses');
-  if (r >= 20) items.push('Refill Stroke of Luck');
-  items.push('Reset death saves');
+  if (b >= 1) items.push('Refill all Rage uses · end any active Rage');
+  if (w >= 1) items.push('Refill all Pact Magic spell slots');
+  items.push('Reset death saves · Goliath ancestry uses · all once-per-Long-Rest features');
   const body = `
     <p>This will:</p>
     <ul>${items.map(i => `<li>${i}</li>`).join('')}</ul>
@@ -7925,16 +8042,12 @@ document.getElementById('long-rest-btn').addEventListener('click', () => {
   showConfirm('Take a Long Rest?', body, () => {
     state.hpCurrent = null;
     state.tempHp = 0;
-    state.usedSlots = { sorc1: 0, sorc2: 0, sorc3: 0, sorc4: 0, sorc5: 0 };
     state.deathSavesSuccess = 0;
     state.deathSavesFail = 0;
     state.hitDiceUsed = Math.max(0, (state.hitDiceUsed || 0) - hdRecover);
-    state.flashOfGeniusUsed = 0;
-    state.tinkersMagicUsed = 0;
-    state.giantStatureUsed = 0;
-    state.infiltratorFlyUsed = 0;
-    state.strokeOfLuckUsed = 0;
-    // Active replicas + attunement persist (RAW). Concentration not auto-reset.
+    state.ragesUsed = 0;
+    state.rageActive = false;
+    state.recklessAttackOn = false;
     saveState();
     render();
   }, { okLabel: 'Long Rest' });
