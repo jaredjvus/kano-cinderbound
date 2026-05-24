@@ -8335,25 +8335,31 @@ function wireSpellPickers(promptsEl) {
     const max = parseInt(picker.dataset.max, 10);
     const type = picker.dataset.pick;
     const countEl = promptsEl.querySelector(`[data-count-for="${type}"]`);
-    const checkboxes = Array.from(picker.querySelectorAll('input[type="checkbox"]'));
+    const inputs = Array.from(picker.querySelectorAll('input[type="checkbox"], input[type="radio"]'));
+    const isRadio = inputs.length > 0 && inputs[0].type === 'radio';
     const update = () => {
-      const checked = checkboxes.filter(c => c.checked);
+      const checked = inputs.filter(c => c.checked);
       countEl.textContent = `${checked.length} / ${max}`;
       countEl.classList.toggle('full', checked.length === max);
-      const reached = checked.length >= max;
-      checkboxes.forEach(c => {
-        const label = c.closest('.spell-pick');
-        if (!c.checked && reached) {
-          c.disabled = true;
-          label.classList.add('disabled');
-        } else {
-          c.disabled = false;
-          label.classList.remove('disabled');
-        }
-      });
+      // For checkboxes, disable un-checked rows once the cap is reached.
+      // Radios are inherently mutually exclusive — skip the disable to allow
+      // changing the selection.
+      if (!isRadio) {
+        const reached = checked.length >= max;
+        inputs.forEach(c => {
+          const label = c.closest('.spell-pick');
+          if (!c.checked && reached) {
+            c.disabled = true;
+            label.classList.add('disabled');
+          } else {
+            c.disabled = false;
+            label.classList.remove('disabled');
+          }
+        });
+      }
       updateConfirmEnabled(promptsEl);
     };
-    checkboxes.forEach(c => c.addEventListener('change', update));
+    inputs.forEach(c => c.addEventListener('change', update));
     update();
   });
 }
@@ -8512,7 +8518,7 @@ function updateConfirmEnabled(promptsEl) {
   let ok = true;
   promptsEl.querySelectorAll('.spell-picker[data-pick], .infusion-picker[data-pick]').forEach(picker => {
     const max = parseInt(picker.dataset.max, 10);
-    const checked = picker.querySelectorAll('input[type="checkbox"]:checked').length;
+    const checked = picker.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked').length;
     if (checked !== max) ok = false;
   });
   btn.disabled = !ok;
