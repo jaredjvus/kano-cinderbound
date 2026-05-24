@@ -654,6 +654,24 @@ body::before {
 .spell-pick.disabled:hover { background: transparent; border-color: transparent; }
 .spell-pick-name { flex: 1; }
 .spell-pick-meta { color: var(--parchment-aged); font-size: 0.75rem; }
+.picker-info {
+  background: transparent;
+  border: 1px solid var(--gold-tarnish);
+  color: var(--gold);
+  font-size: 0.7rem;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.4rem;
+  line-height: 1;
+  transition: border-color 0.15s, color 0.15s;
+  font-family: 'EB Garamond', serif;
+}
+.picker-info:hover { border-color: var(--gold); color: var(--gold-bright); }
 .spell-pick .conc-tag {
   display: inline-block;
   font-size: 0.65rem;
@@ -7049,6 +7067,28 @@ function renderAttackProfilesCard(level) {
     });
   }
 
+  // Eldritch Blast attack profile — Warlock signature cantrip with beam scaling
+  if (state.cantripsKnown && state.cantripsKnown.includes('Eldritch Blast')) {
+    const beams = level >= 17 ? 4 : level >= 11 ? 3 : level >= 5 ? 2 : 1;
+    const hasAgonizing = invocations.has('Agonizing Blast');
+    const hasRepelling = invocations.has('Repelling Blast');
+    const hasSpear = invocations.has('Eldritch Spear');
+    const damagePerBeam = `1d10${hasAgonizing ? ` + ${chaMod}` : ''} force`;
+    const range = hasSpear ? `120 + ${30 * (w || 1)} ft` : '120 ft';
+    const flags = [];
+    if (hasAgonizing) flags.push('Agonizing');
+    if (hasRepelling) flags.push('push 10 ft');
+    if (hasSpear) flags.push(`range +${30 * (w || 1)} ft`);
+    profiles.push({
+      name: 'Eldritch Blast',
+      subtitle: `Cantrip · ${beams} beam${beams > 1 ? 's' : ''} (1 attack roll each)${flags.length ? ' · ' + flags.join(' · ') : ''}`,
+      attack: pb + chaMod,
+      damage: `${beams} × (${damagePerBeam})`,
+      extra: `Ranged spell attack, range ${range}. Each beam targets one creature/object — same or different. Make a separate attack roll for each beam.${hasRepelling ? ' On hit, push Large-or-smaller target up to 10 ft straight away.' : ''}`,
+      ability: 'CHA'
+    });
+  }
+
   // Pact of the Blade — bonded weapon attack using CHA instead of STR/DEX
   if (hasPactBlade) {
     const pactWpn = WEAPONS_DATA.find(x => x.name === (state.pactWeaponName || 'Greatsword')) || WEAPONS_DATA.find(x => x.name === 'Greatsword');
@@ -7098,6 +7138,26 @@ function renderAttackProfilesCard(level) {
     `;
     recklessRow.querySelector('#reckless-toggle-btn').addEventListener('click', toggleReckless);
     list.appendChild(recklessRow);
+  }
+
+  // Pact weapon selector (Pact of the Blade only) — pick any martial melee weapon
+  if (hasPactBlade) {
+    const martialMelees = WEAPONS_DATA.filter(x => x.category === 'martial-melee' || x.category === 'simple-melee');
+    const current = state.pactWeaponName || 'Greatsword';
+    const pactWeaponRow = document.createElement('div');
+    pactWeaponRow.className = 'attack-toggle-row';
+    pactWeaponRow.innerHTML = `
+      <div class="attack-toggle-label has-tip" title="Choose the weapon your patron conjures when you summon your pact weapon. Simple or Martial Melee. Damage type can be the weapon's normal type or Necrotic, Psychic, or Radiant.">Pact Weapon</div>
+      <select id="pact-weapon-select" class="ancestry-select">
+        ${martialMelees.map(wp => `<option value="${wp.name}"${wp.name === current ? ' selected' : ''}>${wp.name} (${wp.damage})</option>`).join('')}
+      </select>
+    `;
+    pactWeaponRow.querySelector('#pact-weapon-select').addEventListener('change', (e) => {
+      state.pactWeaponName = e.target.value;
+      saveState();
+      render();
+    });
+    list.appendChild(pactWeaponRow);
   }
 
   // Brutal Strike effect picker (Barb 9+) — forgo Reckless Advantage on one STR
@@ -7864,12 +7924,20 @@ function findSpellByName(name) {
   return null;
 }
 
+// Peek at the modal's pending subclass dropdown so the prepared-spell picker
+// at Warlock L3 can already include Genie-expanded spells even though the
+// subclass entry hasn't been confirmed yet.
+function gatherPendingSubclassFromPicker() {
+  const sel = document.getElementById('modal-subclass-select');
+  return sel ? sel.value : null;
+}
+
 // For Warlock subclasses that add expanded spells to the prepared-spell list
 // (Genie Patron's generic Genie list + per-kind list), return flat spell objects
 // formatted like SPELLS entries. Filtered by max accessible slot level + dedup.
 function getExpandedSpellsFor(klass, maxLvl, knownSet) {
   if (klass !== 'warlock') return [];
-  const sub = findChosenSubclass('warlock');
+  const sub = findChosenSubclass('warlock') || gatherPendingSubclassFromPicker();
   if (!sub) return [];
   const cls = CLASS_DATA.warlock;
   const subData = cls.subclassData && cls.subclassData[sub];
@@ -7956,6 +8024,7 @@ function buildSpellPickerHTML(klass, classLevel) {
             <input type="checkbox" value="${s.name}">
             <span class="spell-pick-name">${s.name}</span>
             <span class="spell-pick-meta">${s.school}</span>
+            <button type="button" class="picker-info" data-spell="${s.name}" title="Spell details">ⓘ</button>
           </label>
         `).join('')}
       </div>
@@ -7971,6 +8040,7 @@ function buildSpellPickerHTML(klass, classLevel) {
             <input type="checkbox" value="${s.name}">
             <span class="spell-pick-name">${s.name}${s.concentration ? ' <span class="conc-tag">C</span>' : ''}${s.subclassExpanded ? ' <span class="always-tag">' + s.subclassExpanded + '</span>' : ''}</span>
             <span class="spell-pick-meta">${s.level} · ${s.school}</span>
+            <button type="button" class="picker-info" data-spell="${s.name}" title="Spell details">ⓘ</button>
           </label>
         `).join('')}
       </div>
@@ -8005,6 +8075,7 @@ function buildMysticArcanumPickerHTML(spellLevel) {
           <input type="radio" name="mystic-arcanum" value="${s.name}">
           <span class="spell-pick-name">${s.name}${s.concentration ? ' <span class="conc-tag">C</span>' : ''}</span>
           <span class="spell-pick-meta">${s.school}</span>
+          <button type="button" class="picker-info" data-spell="${s.name}" title="Spell details">ⓘ</button>
         </label>
       `).join('')}
     </div>
@@ -8331,6 +8402,17 @@ function buildAsiFeatPickerHTML(klass, classLevel) {
 
 // Wire up the picker after it's inserted into the DOM.
 function wireSpellPickers(promptsEl) {
+  // Wire ⓘ info buttons inside each picker row (cantrip + prepared + arcanum).
+  // Stop propagation so clicking the button doesn't toggle the surrounding label input.
+  promptsEl.querySelectorAll('.picker-info').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const spell = findSpellByName(btn.dataset.spell);
+      if (spell) showSpellInfo(spell);
+    });
+  });
+
   promptsEl.querySelectorAll('.spell-picker').forEach(picker => {
     const max = parseInt(picker.dataset.max, 10);
     const type = picker.dataset.pick;
