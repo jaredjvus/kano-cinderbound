@@ -7240,11 +7240,9 @@ function renderCunningStrikesCard(level) {
 
 function renderWeaponMasteriesCard(level) {
   const card = document.getElementById('weapon-masteries-card');
-  const { r } = classBreakdown(level);
-  const rogueData = r >= 1 ? CLASS_DATA.rogue.perLevel[r] : null;
-  // Only show if Rogue (the only class wired for mastery here) — defer if no
-  // mastery slots are unlocked at her current level.
-  if (r < 1) {
+  const { b } = classBreakdown(level);
+  // Show only if Barbarian (the class wired for mastery here)
+  if (b < 1) {
     card.hidden = true;
     return;
   }
@@ -7253,7 +7251,7 @@ function renderWeaponMasteriesCard(level) {
   const list = document.getElementById('weapon-masteries-list');
   list.innerHTML = '';
   if (masteries.length === 0) {
-    list.innerHTML = '<p style="font-style:italic;color:var(--parchment-aged);font-size:0.85rem;margin:0.4rem 0;">No masteries selected — pick at Rogue 1 or use Swap.</p>';
+    list.innerHTML = '<p style="font-style:italic;color:var(--parchment-aged);font-size:0.85rem;margin:0.4rem 0;">No masteries selected — pick at Barbarian 1 or use Swap.</p>';
     return;
   }
   for (const name of masteries) {
@@ -8213,11 +8211,21 @@ function buildSkillsPickerHTML(klass, classLevel) {
 // Weapon Mastery picker — Rogue L1 picks 2 masteries from any weapon.
 // Currently only Rogue has weaponMastery in CLASS_DATA; Fighter would have more.
 function buildWeaponMasteryPickerHTML(klass, classLevel) {
-  const data = CLASS_DATA[klass].perLevel[classLevel];
-  const max = data && data.weaponMastery;
-  if (!max) return '';
+  const cls = CLASS_DATA[klass];
+  if (!cls) return '';
+  const data = cls.perLevel[classLevel];
+  const prev = classLevel > 1 ? cls.perLevel[classLevel - 1] : null;
+  const totalMax = data && data.weaponMastery;
+  if (!totalMax) return '';
+  const prevMax = prev ? (prev.weaponMastery || 0) : 0;
+  const delta = totalMax - prevMax;
+  if (delta <= 0) return '';
 
-  // Group weapons by category for visual separation
+  // Barbarians (and Fighters, etc.) get the property of any Simple OR Martial Melee
+  // weapon. Per the 2024 Barb spec, the list is restricted to MELEE weapons.
+  const restrictMelee = klass === 'barbarian';
+  const known = new Set(state.weaponMasteries || []);
+
   const groups = {
     'simple-melee':   'Simple Melee',
     'simple-ranged':  'Simple Ranged',
@@ -8226,8 +8234,11 @@ function buildWeaponMasteryPickerHTML(klass, classLevel) {
   };
   const rows = [];
   for (const [cat, label] of Object.entries(groups)) {
+    if (restrictMelee && cat.endsWith('-ranged')) continue;
+    const weapons = WEAPONS_DATA.filter(x => x.category === cat && !known.has(x.name));
+    if (weapons.length === 0) continue;
     rows.push(`<div class="infusion-picker-group-label">${label}</div>`);
-    for (const w of WEAPONS_DATA.filter(x => x.category === cat)) {
+    for (const w of weapons) {
       rows.push(`
         <label class="spell-pick" data-weapon="${w.name}">
           <input type="checkbox" value="${w.name}">
@@ -8239,9 +8250,9 @@ function buildWeaponMasteryPickerHTML(klass, classLevel) {
   }
 
   return `<div class="modal-prompt">
-    <div class="modal-prompt-label">Weapon Mastery · pick ${max} weapon${max > 1 ? 's' : ''}</div>
-    <div class="spell-picker weapon-mastery-picker" data-pick="weaponMastery" data-max="${max}">${rows.join('')}</div>
-    <div class="spell-picker-count" data-count-for="weaponMastery">0 / ${max}</div>
+    <div class="modal-prompt-label">Weapon Mastery · pick ${delta} more weapon${delta > 1 ? 's' : ''} (${totalMax} total)${restrictMelee ? ' · Simple or Martial Melee' : ''}</div>
+    <div class="spell-picker weapon-mastery-picker" data-pick="weaponMastery" data-max="${delta}">${rows.join('')}</div>
+    <div class="spell-picker-count" data-count-for="weaponMastery">0 / ${delta}</div>
   </div>`;
 }
 
@@ -9424,16 +9435,17 @@ document.getElementById('infusions-overlay').addEventListener('click', (e) => {
 // Swap Weapon Masteries modal (Phase 2I)
 // ============================================================
 function openSwapMastery() {
-  const { r } = classBreakdown(state.level);
-  if (r < 1) return;
-  // Pull the max from her Rogue L1 entry (where Weapon Mastery was granted)
-  const max = CLASS_DATA.rogue.perLevel[1].weaponMastery || 2;
+  const { b } = classBreakdown(state.level);
+  if (b < 1) return;
+  // Total masteries the Barbarian knows at the current level
+  const max = (CLASS_DATA.barbarian.perLevel[b] && CLASS_DATA.barbarian.perLevel[b].weaponMastery) || 2;
   const current = new Set(state.weaponMasteries || []);
+  const restrictMelee = true; // Barbarian weapon-mastery list is melee-only
 
   const overlay = document.getElementById('mastery-overlay');
   const prompts = document.getElementById('mastery-prompts');
   document.getElementById('mastery-subtitle').textContent =
-    `Pick exactly ${max} weapon${max > 1 ? 's' : ''} to master after this rest.`;
+    `Long Rest swap — change one of your mastered weapons. Pick exactly ${max} total.`;
 
   const groups = {
     'simple-melee':   'Simple Melee',
@@ -9443,6 +9455,7 @@ function openSwapMastery() {
   };
   const rows = [];
   for (const [cat, label] of Object.entries(groups)) {
+    if (restrictMelee && cat.endsWith('-ranged')) continue;
     rows.push(`<div class="infusion-picker-group-label">${label}</div>`);
     for (const w of WEAPONS_DATA.filter(x => x.category === cat)) {
       rows.push(`
