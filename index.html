@@ -867,6 +867,16 @@ body::before {
   cursor: pointer;
 }
 .spell-row .spell-cast:hover { background: var(--gold); color: #fff; }
+.spell-row .spell-cast.used,
+.spell-row .spell-cast:disabled {
+  color: var(--parchment-dim);
+  border-color: var(--parchment-dim);
+  background: transparent;
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.spell-row .spell-cast.used:hover,
+.spell-row .spell-cast:disabled:hover { background: transparent; color: var(--parchment-dim); }
 .spell-row .spell-info {
   font-size: 0.85rem;
   color: var(--gold);
@@ -6827,6 +6837,10 @@ function renderMagicCard(level) {
         header.textContent = spell.level === 'Cantrip' ? 'Cantrips' : `Level ${spellLevelToNum(spell.level)}`;
         preparedList.appendChild(header);
       }
+      // Are any slots available that can cast this spell? Pact slots upcast to a
+      // single level — at Warlock w that's wlData.pactSlots.level.
+      const tiers = getValidSlotTiers(spell, level);
+      const slotsAvailable = tiers.some(t => (t.max - t.used) > 0);
       const row = document.createElement('div');
       row.className = 'spell-row';
       row.innerHTML = `
@@ -6834,7 +6848,7 @@ function renderMagicCard(level) {
         <span class="spell-meta">${spell.school} · ${spell.range}</span>
         <span class="spell-actions">
           <button class="spell-info" data-spell="${spell.name}" title="Spell details">ⓘ</button>
-          <button class="spell-cast" data-spell="${spell.name}">Cast</button>
+          <button class="spell-cast ${slotsAvailable ? '' : 'used'}" data-spell="${spell.name}"${slotsAvailable ? '' : ' disabled title="No Pact Magic slot available — Short Rest to recover"'}>${slotsAvailable ? 'Cast' : 'No slot'}</button>
         </span>
       `;
       preparedList.appendChild(row);
