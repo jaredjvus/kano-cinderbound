@@ -6231,6 +6231,10 @@ function hasFeat(featId, level) {
 // ============================================================
 
 function render() {
+  // Defensive: any rage-ending condition that's currently active forces rage off
+  // BEFORE every render, so the visual display can't drift from RAW.
+  enforceRageEndingConditions();
+
   const level = state.level;
   const stats = computeStats(level);
   const pb = profBonus(level);
@@ -6944,6 +6948,23 @@ function triggerMagicalCunning() {
   render();
 }
 
+// Enforce the RAW rule "Rage ends if you become Incapacitated (or, at Barb 15+,
+// only Unconscious)". Several other conditions include Incapacitated by RAW —
+// stunned, paralyzed, petrified, unconscious — so flipping any of them should
+// also end an active Rage. Safe to call from anywhere; idempotent.
+function enforceRageEndingConditions() {
+  if (!state.rageActive) return;
+  const { b } = classBreakdown(state.level);
+  const c = state.conditions || {};
+  const incapacitatingConditions = c.incapacitated || c.stunned || c.paralyzed || c.petrified || c.unconscious;
+  const rageEnds = b >= 15 ? !!c.unconscious : !!incapacitatingConditions;
+  if (rageEnds) {
+    state.rageActive = false;
+    state.recklessAttackOn = false;
+    state.elementalCleaverType = '';
+  }
+}
+
 // Rage button: Enter Rage spends a pip + flips active; End Rage just flips active off (no pip refund).
 // Entering Rage prompts to break Concentration; ending Rage clears Elemental Cleaver + Reckless.
 function toggleRage(ragesMax) {
@@ -7295,15 +7316,9 @@ function renderConditions() {
     pill.addEventListener('click', () => {
       state.conditions[key] = !state.conditions[key];
       // RAW: Rage ends if you become Incapacitated (or only Unconscious at Barb 15+).
-      if (state.rageActive) {
-        const { b } = classBreakdown(state.level);
-        const rageEnder = b >= 15 ? 'unconscious' : (key === 'unconscious' ? 'unconscious' : 'incapacitated');
-        if (state.conditions[rageEnder]) {
-          state.rageActive = false;
-          state.recklessAttackOn = false;
-          state.elementalCleaverType = '';
-        }
-      }
+      // Conditions that include Incapacitated by RAW: incapacitated, stunned,
+      // paralyzed, petrified, unconscious. Unconscious always ends rage.
+      enforceRageEndingConditions();
       saveState();
       render(); // condition flips can change Speed and other displayed stats
     });
