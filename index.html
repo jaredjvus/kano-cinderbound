@@ -1695,11 +1695,12 @@ body.dm-mode .infusion-row input { pointer-events: none; opacity: 0.5; }
   text-transform: uppercase;
   color: var(--gold);
 }
-.resource-label.has-tip {
-  cursor: help;
+.has-tip {
+  cursor: pointer;
   border-bottom: 1px dotted var(--gold-tarnish);
 }
-.resource-label.has-tip:hover { color: var(--gold-bright); border-bottom-color: var(--gold); }
+.has-tip:hover { color: var(--gold-bright); border-bottom-color: var(--gold); }
+/* DM keeps the click-to-modal — it's informational, not a state change. */
 .resource-value {
   display: flex;
   align-items: baseline;
@@ -5895,15 +5896,23 @@ function ebBeams(level) {
 // Falls back to 'avgplus1' if no history entry exists yet.
 function hpPerLevelGain(entry) {
   if (!entry) return 6;
-  if (entry.hpMethod === 'avg') return 5;
-  if (entry.hpMethod === 'roll') return Math.max(1, entry.hpRolled || 1);
-  return 6; // 'avgplus1' default
+  const cls = CLASS_DATA[entry.class];
+  const die = cls ? cls.hitDie : 8;
+  // 2024 PHB: "average" listed value = die/2 + 1 (d8→5, d10→6, d12→7).
+  // DM default at this table: average + 1 (d8→6, d12→8).
+  if (entry.hpMethod === 'avg') return die / 2 + 1;
+  if (entry.hpMethod === 'roll') return Math.max(1, Math.min(die, entry.hpRolled || 1));
+  return die / 2 + 2; // 'avgplus1' default
 }
 function computeHP(level, stats) {
   if (level < 1) return 0;
   const conMod = mod(stats.con);
   const history = state.levelHistory || [];
-  let hp = 8 + conMod; // L1 = max die
+  // L1 = max die of the FIRST class taken
+  const firstEntry = history[0];
+  const firstCls = firstEntry ? CLASS_DATA[firstEntry.class] : null;
+  const firstDie = firstCls ? firstCls.hitDie : 8;
+  let hp = firstDie + conMod;
   for (let l = 2; l <= level; l++) {
     const entry = history[l - 1];
     hp += hpPerLevelGain(entry) + conMod;
@@ -6062,23 +6071,47 @@ function render() {
 
   // Point-buy tracker
   renderPointBuy();
+
+  // Convert hover-only title tooltips on .has-tip elements into click-to-modal.
+  // Run last so it catches everything dynamically rendered above.
+  processTipsForClickToModal();
+}
+
+// Strip native title="" from .has-tip elements (so the browser tooltip doesn't
+// fire on hover) and stash the text on data-tip for the click handler to read.
+function processTipsForClickToModal() {
+  document.querySelectorAll('.has-tip[title]').forEach(el => {
+    el.dataset.tip = el.getAttribute('title');
+    el.removeAttribute('title');
+  });
 }
 
 function hpFormulaText(level, stats) {
   if (level < 1) return '—';
   const conMod = mod(stats.con);
   const history = state.levelHistory || [];
-  let rolledCount = 0, avgCount = 0, avgPlus1Count = 0;
+  // L1: first class's hit die maxed
+  const firstEntry = history[0];
+  const firstCls = firstEntry ? CLASS_DATA[firstEntry.class] : null;
+  const firstDie = firstCls ? firstCls.hitDie : 8;
+  const parts = [`max d${firstDie} L1 (${firstDie})`];
+  // Per-level gains grouped by class+method since dice vary
+  const grouping = {};
   for (let l = 2; l <= level; l++) {
-    const m = history[l - 1] && history[l - 1].hpMethod;
-    if (m === 'avg') avgCount++;
-    else if (m === 'roll') rolledCount++;
-    else avgPlus1Count++;
+    const e = history[l - 1];
+    if (!e) continue;
+    const cls = CLASS_DATA[e.class];
+    const die = cls ? cls.hitDie : 8;
+    const method = e.hpMethod || 'avgplus1';
+    const value = hpPerLevelGain(e);
+    const key = `${method}-d${die}-${value}`;
+    grouping[key] = (grouping[key] || 0) + 1;
   }
-  const parts = [`max die L1 (8)`];
-  if (avgPlus1Count) parts.push(`${avgPlus1Count}×avg+1 (6)`);
-  if (avgCount) parts.push(`${avgCount}×avg (5)`);
-  if (rolledCount) parts.push(`${rolledCount}×rolled`);
+  for (const [key, count] of Object.entries(grouping)) {
+    const [method, die, value] = key.split('-');
+    const label = method === 'avgplus1' ? 'avg+1' : method === 'avg' ? 'avg' : 'rolled';
+    parts.push(`${count}×${label} (${value})`);
+  }
   parts.push(`${conMod * level} CON`);
   return parts.join(' + ');
 }
@@ -6282,14 +6315,24 @@ function renderCombatResources(level) {
     dynRows.appendChild(row);
   }
 
-  // ---- Hit Dice ---- (both classes are d8; pool = character level)
+  // ---- Hit Dice ---- (mixed dice for multiclass; meta shows the breakdown)
   if (level > 0) {
     const hdMax = level;
     const hdUsed = Math.min(state.hitDiceUsed || 0, hdMax);
+    // Show class breakdown in meta text (e.g., "1d12 + 1d8" for Barb 1 / Warlock 1)
+    const diceByClass = {};
+    for (const e of (state.levelHistory || [])) {
+      const cls = CLASS_DATA[e.class];
+      if (!cls) continue;
+      const key = `d${cls.hitDie}`;
+      diceByClass[key] = (diceByClass[key] || 0) + 1;
+    }
+    const breakdownParts = Object.entries(diceByClass).map(([die, n]) => `${n}${die}`);
+    const breakdownText = breakdownParts.length ? breakdownParts.join(' + ') : `${level}d?`;
     const row = document.createElement('div');
     row.className = 'resource-row';
     row.innerHTML = `
-      <span class="resource-label has-tip" title="Spend a Hit Die on a short rest to heal HD + CON mod HP. Long rest restores up to half your character level (min 1).">Hit Dice <span class="resource-meta">(d8)</span></span>
+      <span class="resource-label has-tip" title="Spend a Hit Die on a short rest to roll for HP recovery (HD + CON mod). Long Rest refunds up to half your character level (min 1). For multiclass: each class's dice are tracked together here; you choose which die to roll when you spend.">Hit Dice <span class="resource-meta">${breakdownText}</span></span>
       <div class="resource-pips" data-resource="hd"></div>
     `;
     const pipsBox = row.querySelector('.resource-pips');
@@ -8305,12 +8348,16 @@ function buildExpertisePickerHTML(klass, classLevel) {
 function buildHpPickerHTML(klass, classLevel) {
   const charLevel = (state.maxLevel || 0) + 1;
   if (charLevel === 1) return ''; // L1 always max die
+  const cls = CLASS_DATA[klass];
+  const die = cls ? cls.hitDie : 8;
+  const avg = die / 2 + 1;
+  const avgPlus1 = die / 2 + 2;
   return `<div class="modal-prompt">
-    <div class="modal-prompt-label">Hit Point Gain (d8)</div>
+    <div class="modal-prompt-label">Hit Point Gain (d${die})</div>
     <div class="hp-picker">
-      <label><input type="radio" name="hp-method" value="avgplus1" checked> Avg + 1 (DM default) · <strong>6</strong></label>
-      <label><input type="radio" name="hp-method" value="avg"> Average · <strong>5</strong></label>
-      <label><input type="radio" name="hp-method" value="roll"> Rolled: <input type="number" id="hp-roll-value" min="1" max="8" value="5" disabled></label>
+      <label><input type="radio" name="hp-method" value="avgplus1" checked> Avg + 1 (DM default) · <strong>${avgPlus1}</strong></label>
+      <label><input type="radio" name="hp-method" value="avg"> Average · <strong>${avg}</strong></label>
+      <label><input type="radio" name="hp-method" value="roll"> Rolled: <input type="number" id="hp-roll-value" min="1" max="${die}" value="${avg}" disabled></label>
     </div>
   </div>`;
 }
@@ -9665,8 +9712,24 @@ document.getElementById('hp-info-btn').addEventListener('click', () => {
   showInfo('Hit Point Formula',
     `<div class="spell-info-subtitle">Max HP at character level ${level}: ${max}</div>` +
     `<p style="font-family:'EB Garamond',serif; font-size:0.95rem; color:var(--parchment); line-height:1.5; margin:0;">${formula}</p>` +
-    `<p style="font-family:'EB Garamond',serif; font-size:0.85rem; color:var(--parchment-aged); font-style:italic; line-height:1.5; margin-top:0.8rem;">L1 is always max die (8). Subsequent levels use whatever method was picked during level-up (Avg+1 / Avg / Rolled). CON modifier is added once per level.</p>`
+    `<p style="font-family:'EB Garamond',serif; font-size:0.85rem; color:var(--parchment-aged); font-style:italic; line-height:1.5; margin-top:0.8rem;">L1 is always max die of the first class taken. Subsequent levels use whatever method was picked during level-up (Avg+1 / Avg / Rolled). CON modifier is added once per level.</p>`
   );
+});
+
+// Click-to-modal for any .has-tip label (combat resources, attack toggles, etc.).
+// Skips clicks that originate on a child interactive control (button, input, etc.)
+// so toggling a pip / rage button / dropdown doesn't also fire the info modal.
+document.addEventListener('click', (e) => {
+  const tip = e.target.closest('.has-tip');
+  if (!tip || !tip.dataset.tip) return;
+  if (e.target.closest('input, button, select, textarea, a')) return;
+  // Clean label = element's text without the .resource-meta sub-line
+  const clone = tip.cloneNode(true);
+  clone.querySelectorAll('.resource-meta').forEach(m => m.remove());
+  const label = clone.textContent.trim().replace(/\s+/g, ' ') || 'Info';
+  // Paragraph-break on newlines for multi-sentence tooltips
+  const body = tip.dataset.tip.split(/\n+/).map(p => `<p style="font-family:'EB Garamond',serif; font-size:0.95rem; color:var(--parchment); line-height:1.55; margin:0 0 0.6rem;">${p}</p>`).join('');
+  showInfo(label, body);
 });
 
 document.getElementById('conditions-clear').addEventListener('click', () => {
