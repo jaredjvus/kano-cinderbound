@@ -1627,6 +1627,74 @@ body.dm-mode .infusion-row input { pointer-events: none; opacity: 0.5; }
   margin-right: 0.5rem;
 }
 
+/* Spell stat row at top of Magic card */
+.spell-stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.spell-stat-cell {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--gold-tarnish);
+  background: rgba(42, 10, 10, 0.6);
+  text-align: center;
+}
+.spell-stat-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.2rem;
+}
+.spell-stat-value {
+  font-family: 'Cinzel', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--parchment);
+}
+.spell-stat-sub {
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 0.78rem;
+  color: var(--parchment-aged);
+  margin-top: 0.15rem;
+}
+
+/* Pact of the Tome — Book of Shadows inline editor */
+.tome-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 0.6rem 0.8rem;
+  margin: 0.5rem 0 0.8rem;
+  background: rgba(42, 10, 10, 0.45);
+  border: 1px dashed var(--gold-tarnish);
+}
+.tome-col-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.4rem;
+}
+.tome-input {
+  display: block;
+  width: 100%;
+  font-family: 'EB Garamond', serif;
+  font-size: 0.9rem;
+  color: var(--parchment);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--gold-tarnish);
+  padding: 0.25rem 0.3rem;
+  margin-bottom: 0.4rem;
+}
+.tome-input:focus { outline: none; border-bottom-color: var(--gold); }
+body.dm-mode .tome-input { pointer-events: none; opacity: 0.7; }
+
 .save-tag {
   display: inline-block;
   margin-left: 0.4rem;
@@ -3418,6 +3486,7 @@ body.dm-mode .dm-hide { display: none; }
       </h3>
       </summary>
       <div class="collapsible-body">
+      <div class="spell-stat-row" id="spell-stat-row"></div>
       <div id="spell-slots"></div>
       <div class="spell-section-title"><span>Cantrips</span><span class="spell-count" id="cantrip-count"></span></div>
       <div id="cantrip-list"></div>
@@ -5806,6 +5875,10 @@ const DEFAULT_STATE = {
   elementalCleaverType: '',  // Path of the Giant L6: 'acid'/'cold'/'fire'/'thunder'/'lightning' (set on Rage entry)
   pactWeaponDamageType: 'normal', // Pact of the Blade: 'normal' or 'Necrotic'/'Psychic'/'Radiant'
   genieWrathUsedTurn: false, // 1/turn: Genie's Wrath +PB damage flag (manually reset on new turn)
+  // Pact of the Tome: Book of Shadows grants 3 cantrips + 2 ritual spells (from any class).
+  // Player edits inline at the Magic card. Refreshed each Short/Long Rest by RAW; sticky here for simplicity.
+  tomeCantrips: ['', '', ''],
+  tomeRitualSpells: ['', ''],
   // Warlock Pact Magic + Invocations tracking
   pactSlotsUsed: 0,          // count of Pact Magic slots spent (short-rest recovery)
   warlockInvocations: [],    // names of Eldritch Invocations currently known
@@ -6905,6 +6978,14 @@ function renderCombatStatus(level) {
       ragingLines.push(`Reach <strong>+${reach} ft</strong> · Size becomes <strong>${size}</strong> (Giant Stature)`);
       ragingLines.push(`Crushing Throw: Rage Damage applies to thrown STR-weapon ranged attacks`);
     }
+    // Mighty Impel DC (Barb 10+ PotG, Bonus Action while raging)
+    if (b >= 10 && barbSub === 'Path of the Giant') {
+      const stats = computeStats(level);
+      const pb = profBonus(level);
+      const dc = 8 + pb + mod(stats.str);
+      const sizeLimit = b >= 14 ? 'Large or smaller' : 'Medium or smaller';
+      ragingLines.push(`<strong>Mighty Impel</strong> (Bonus Action): hurl a ${sizeLimit} creature within reach to a space within 30 ft. STR save <strong>DC ${dc}</strong> if unwilling.`);
+    }
     // Elemental Cleaver damage type (Barb 6+ PotG)
     if (b >= 6 && barbSub === 'Path of the Giant' && state.elementalCleaverType) {
       const extra = b >= 14 ? '2d6' : '1d6';
@@ -7000,6 +7081,21 @@ function renderMagicCard(level) {
   }
   card.hidden = false;
 
+  // Spell stat row: Save DC + Attack Bonus (always shown when Warlock 1+)
+  const stats = computeStats(level);
+  const pb = profBonus(level);
+  const chaMod = mod(stats.cha);
+  const spellSaveDC = 8 + pb + chaMod;
+  const spellAttackBonus = pb + chaMod;
+  const statRow = document.getElementById('spell-stat-row');
+  if (statRow) {
+    statRow.innerHTML = `
+      <div class="spell-stat-cell"><div class="spell-stat-label">Spell Save DC</div><div class="spell-stat-value">${spellSaveDC}</div><div class="spell-stat-sub">8 + PB + CHA</div></div>
+      <div class="spell-stat-cell"><div class="spell-stat-label">Spell Attack</div><div class="spell-stat-value">${spellAttackBonus >= 0 ? '+' : ''}${spellAttackBonus}</div><div class="spell-stat-sub">PB + CHA</div></div>
+      <div class="spell-stat-cell"><div class="spell-stat-label">Casting Ability</div><div class="spell-stat-value">CHA</div><div class="spell-stat-sub">Warlock</div></div>
+    `;
+  }
+
   // Pact Magic slot summary (single tier; pip controls live in Combat Resources)
   const slotsContainer = document.getElementById('spell-slots');
   slotsContainer.innerHTML = '';
@@ -7073,6 +7169,42 @@ function renderMagicCard(level) {
       `;
       preparedList.appendChild(row);
     }
+  }
+
+  // Pact of the Tome section — Book of Shadows: 3 cantrips + 2 ritual spells (any class)
+  const invocations = new Set(state.warlockInvocations || []);
+  if (invocations.has('Pact of the Tome')) {
+    const tomeHeader = document.createElement('div');
+    tomeHeader.className = 'spell-level-header';
+    tomeHeader.innerHTML = `Book of Shadows · Pact of the Tome <span style="font-style:italic;font-weight:400;color:var(--parchment-aged);font-size:0.85em;">— 3 cantrips + 2 ritual spells (any class). Refreshed each rest.</span>`;
+    preparedList.appendChild(tomeHeader);
+    const tomeRow = document.createElement('div');
+    tomeRow.className = 'tome-grid';
+    tomeRow.innerHTML = `
+      <div class="tome-col">
+        <div class="tome-col-label">Cantrips (3)</div>
+        ${[0,1,2].map(i => `<input class="tome-input" data-tome="cantrip" data-idx="${i}" value="${(state.tomeCantrips && state.tomeCantrips[i]) || ''}" placeholder="cantrip name">`).join('')}
+      </div>
+      <div class="tome-col">
+        <div class="tome-col-label">1st-level Ritual Spells (2)</div>
+        ${[0,1].map(i => `<input class="tome-input" data-tome="ritual" data-idx="${i}" value="${(state.tomeRitualSpells && state.tomeRitualSpells[i]) || ''}" placeholder="ritual spell name">`).join('')}
+      </div>
+    `;
+    tomeRow.querySelectorAll('.tome-input').forEach(inp => {
+      inp.addEventListener('input', (e) => {
+        const target = e.target;
+        const idx = parseInt(target.dataset.idx, 10);
+        if (target.dataset.tome === 'cantrip') {
+          state.tomeCantrips = state.tomeCantrips || ['', '', ''];
+          state.tomeCantrips[idx] = target.value;
+        } else {
+          state.tomeRitualSpells = state.tomeRitualSpells || ['', ''];
+          state.tomeRitualSpells[idx] = target.value;
+        }
+        saveState();
+      });
+    });
+    preparedList.appendChild(tomeRow);
   }
 
   // Mystic Arcanum section (Warlock 11+) — appended to prepared list, separate header
@@ -7383,12 +7515,17 @@ function renderAttackProfilesCard(level) {
     if (concentratingOnHex) flagParts.push('Hex');
     if (cleaverActive && wpn.name === (state.pactWeaponName || 'Greatsword')) flagParts.push('Cleaver');
     if (brutalActive) flagParts.push('Brutal');
+    // Mastery on-miss / on-hit notes that need surfacing
+    const extraNote = [`${wpn.properties}`, `${MASTERY_DESCRIPTIONS[wpn.mastery] || ''}`];
+    if (wpn.mastery === 'Graze') {
+      extraNote.push(`<strong>On miss:</strong> still deal ${abilityMod} ${damageType} (Graze).`);
+    }
     profiles.push({
       name: wpn.name,
       subtitle: `Mastery · ${wpn.mastery}${flagParts.length ? ' · ' + flagParts.join(' · ') : ''}`,
       attack: pb + abilityMod,
       damage: damageStr,
-      extra: `${wpn.properties} · ${MASTERY_DESCRIPTIONS[wpn.mastery] || ''}`,
+      extra: extraNote.join(' · '),
       ability: ability.toUpperCase() + (isStrAttack && isRaging ? ' · +' + rageBonus + ' Rage' : '')
     });
   }
