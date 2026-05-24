@@ -5175,6 +5175,7 @@ const FEATS = [
   { name: 'Musician',        category: 'Origin',  minLevel: 1, effect: 'Proficiency with 3 musical instruments. After a short/long rest, grant Heroic Inspiration to allies who heard you play (up to prof bonus).' },
   { name: 'Savage Attacker', category: 'Origin',  minLevel: 1, effect: 'Once per turn, reroll the damage dice of a weapon attack and use either result.' },
   { name: 'Skilled',         category: 'Origin',  minLevel: 1, effect: 'Gain proficiency in any combination of 3 skills or tools.' },
+  { name: 'Strike of the Giants', category: 'Origin', minLevel: 1, prereq: 'Martial Weapon Proficiency or Giant Foundling background', effect: 'Once per turn on a successful melee/thrown weapon hit, expend a use to add a strike effect (PB uses/LR). Save DC = 8 + PB + STR or CON (whichever higher). Cloud: +1d4 thunder, WIS save or you are Invisible to target until your next turn / you attack / cast. Fire: +1d10 fire. Frost: +1d6 cold, CON save or target Speed 0 until your next turn. Hill: +1d6 weapon-type, STR save or Prone. Stone: +1d6 force, STR save or pushed 10 ft. Storm: +1d6 lightning, CON save or Disadvantage on attacks until its next turn.' },
   { name: 'Tavern Brawler',  category: 'Origin',  minLevel: 1, effect: 'Unarmed strikes use 1d4 + STR for damage. Bonus action grapple after Unarmed Strike. +1 STR or CON.', asi: { con: 1 } },
   { name: 'Tough',           category: 'Origin',  minLevel: 1, effect: '+2 HP per character level (current and future).' },
 
@@ -5963,6 +5964,10 @@ const DEFAULT_STATE = {
   pactWeaponName: 'Greatsword', // bound pact weapon when Pact of the Blade is picked
   // Goliath ancestry use tracker (PB/Long Rest)
   ancestryUsesUsed: 0,
+  // Strike of the Giants origin feat (Giant Foundling background)
+  // PB uses per Long Rest; '' | 'Cloud' | 'Fire' | 'Frost' | 'Hill' | 'Stone' | 'Storm'
+  strikeOfTheGiantsUsed: 0,
+  strikeOfTheGiantsType: '',
   // Genie Patron (Warlock 3+)
   vesselHpCurrent: null,     // null = match max (Warlock level + PB)
   bottledRespiteUsed: false, // 1/Long Rest entry to vessel
@@ -6486,6 +6491,31 @@ function renderCombatResources(level) {
       }
       dynRows.appendChild(row);
     }
+  }
+
+  // ---- Strike of the Giants ---- (Origin Feat, PB/Long Rest)
+  const hasStrikeOfTheGiants = (state.feats || []).some(f => f.name === 'Strike of the Giants');
+  if (hasStrikeOfTheGiants) {
+    const max = pb;
+    const used = Math.min(state.strikeOfTheGiantsUsed || 0, max);
+    const saveAbility = mod(stats.str) >= mod(stats.con) ? 'STR' : 'CON';
+    const saveDC = 8 + pb + Math.max(mod(stats.str), mod(stats.con));
+    const row = document.createElement('div');
+    row.className = 'resource-row';
+    const tipText = `Once per turn on a successful melee or thrown weapon hit, expend a use to add a strike effect. ${pb} uses per Long Rest. Save DC ${saveDC} (8 + PB + ${saveAbility}, whichever is higher of STR/CON). Pick the strike type in the Attack Profiles card. Click pips to track uses.`;
+    row.innerHTML = `
+      <span class="resource-label has-tip" title="${tipText.replace(/"/g, '&quot;')}">Strike of the Giants <span class="resource-meta">DC ${saveDC} · PB / LR · 1/turn</span></span>
+      <div class="resource-pips" data-resource="strike-of-the-giants"></div>
+    `;
+    const pipsBox = row.querySelector('.resource-pips');
+    for (let i = 0; i < max; i++) {
+      const pip = document.createElement('div');
+      pip.className = 'pip' + (i >= max - used ? ' used' : '');
+      pip.title = `Strike of the Giants use ${i + 1}`;
+      pip.addEventListener('click', () => toggleIntModResource('strikeOfTheGiantsUsed', i, max));
+      pipsBox.appendChild(pip);
+    }
+    dynRows.appendChild(row);
   }
 
   // ---- Pact Magic slots ---- (Warlock L1+, recovers on Short OR Long Rest)
@@ -7810,6 +7840,13 @@ function renderAttackProfilesCard(level) {
   const cleaverExtra = b >= 14 ? '2d6' : '1d6';
   const brutalActive = b >= 9 && state.brutalStrikeEffect && state.brutalStrikeEffect !== 'none';
   const brutalDice = b >= 17 ? '+2d10' : '+1d10';
+  // Strike of the Giants (Origin Feat): chosen type stacks +damage on next melee/thrown hit (1/turn)
+  const STRIKE_DICE = { Cloud: '1d4 thunder', Fire: '1d10 fire', Frost: '1d6 cold', Hill: '1d6 weapon-type', Stone: '1d6 force', Storm: '1d6 lightning' };
+  const hasStrikeFeatProfile = (state.feats || []).some(f => f.name === 'Strike of the Giants');
+  const strikeRemaining = Math.max(0, pb - (state.strikeOfTheGiantsUsed || 0));
+  const strikeActive = hasStrikeFeatProfile && state.strikeOfTheGiantsType && strikeRemaining > 0;
+  const strikeType = strikeActive ? state.strikeOfTheGiantsType : '';
+  const strikeDieAndType = strikeActive ? STRIKE_DICE[strikeType] : '';
 
   // Each weapon mastery picked — auto-builds an attack profile per weapon
   for (const name of state.weaponMasteries || []) {
@@ -7831,12 +7868,19 @@ function renderAttackProfilesCard(level) {
     }
     if (hasGeniesWrath && !state.genieWrathUsedTurn) damageParts.push(`+ ${pb} ${genieDmgType} (Genie's Wrath, 1/turn)`);
     if (brutalActive && isStrAttack) damageParts.push(`${brutalDice} (Brutal Strike)`);
+    if (strikeActive) {
+      const strikeDamageLine = strikeType === 'Hill'
+        ? `+ 1d6 ${damageType} (Strike: Hill, 1/turn)`
+        : `+ ${strikeDieAndType} (Strike: ${strikeType}, 1/turn)`;
+      damageParts.push(strikeDamageLine);
+    }
     const damageStr = damageParts.join(' ') + ' ' + (cleaverActive && wpn.name === (state.pactWeaponName || 'Greatsword') ? state.elementalCleaverType : damageType);
     const flagParts = [];
     if (isStrAttack && isRaging) flagParts.push('RAGING');
     if (concentratingOnHex) flagParts.push('Hex');
     if (cleaverActive && wpn.name === (state.pactWeaponName || 'Greatsword')) flagParts.push('Cleaver');
     if (brutalActive) flagParts.push('Brutal');
+    if (strikeActive) flagParts.push(`Strike: ${strikeType}`);
     // Mastery on-miss / on-hit notes that need surfacing
     const extraNote = [`${wpn.properties}`, `${MASTERY_DESCRIPTIONS[wpn.mastery] || ''}`];
     if (wpn.mastery === 'Graze') {
@@ -7883,12 +7927,19 @@ function renderAttackProfilesCard(level) {
                        : pactWpn.damage.split(' ')[1] === 'P' ? 'piercing' : 'slashing';
       const chosenType = (state.pactWeaponDamageType && state.pactWeaponDamageType !== 'normal') ? state.pactWeaponDamageType.toLowerCase() : normalType;
       const lifedrinkBonus = hasLifedrinker ? ' + 1d6 N/P/R (Lifedrinker)' : '';
+      const strikeBonus = strikeActive
+        ? (strikeType === 'Hill'
+            ? ` + 1d6 ${chosenType} (Strike: Hill)`
+            : ` + ${strikeDieAndType} (Strike: ${strikeType})`)
+        : '';
       const attackBonus = pb + chaMod;
+      const pactSubtitleFlags = [hasThirstingBlade ? (hasDevouringBlade ? '3 attacks/turn' : '2 attacks/turn') : '1 attack/turn'];
+      if (strikeActive) pactSubtitleFlags.push(`Strike: ${strikeType}`);
       profiles.push({
         name: 'Pact Weapon · ' + pactWpn.name,
-        subtitle: `Pact of the Blade · ${hasThirstingBlade ? (hasDevouringBlade ? '3 attacks/turn' : '2 attacks/turn') : '1 attack/turn'}`,
+        subtitle: `Pact of the Blade · ${pactSubtitleFlags.join(' · ')}`,
         attack: attackBonus,
-        damage: `${damageDie} + ${chaMod} ${chosenType}${lifedrinkBonus}`,
+        damage: `${damageDie} + ${chaMod} ${chosenType}${lifedrinkBonus}${strikeBonus}`,
         extra: `${pactWpn.properties} · damage type swappable (selector below). ${hasEldritchSmite ? '<strong>Eldritch Smite:</strong> spend Pact slot on hit for +1d8 force/slot level + Prone (Huge or smaller).' : ''}`,
         ability: 'CHA (Pact)' + (hasLifedrinker ? ' · +1d6' : '')
       });
@@ -8051,6 +8102,39 @@ function renderAttackProfilesCard(level) {
       render();
     });
     list.appendChild(brutalRow);
+  }
+
+  // Strike of the Giants type picker (Origin Feat) — choose which strike effect to apply
+  const hasStrikeFeat = (state.feats || []).some(f => f.name === 'Strike of the Giants');
+  if (hasStrikeFeat) {
+    const sotgMax = pb;
+    const sotgRemaining = Math.max(0, sotgMax - (state.strikeOfTheGiantsUsed || 0));
+    const saveAbility = mod(stats.str) >= mod(stats.con) ? 'STR' : 'CON';
+    const sotgDC = 8 + pb + Math.max(mod(stats.str), mod(stats.con));
+    const sotgCurrent = state.strikeOfTheGiantsType || '';
+    const sotgOptions = [
+      { id: '',       label: '— off / no strike chosen —' },
+      { id: 'Cloud',  label: 'Cloud: +1d4 thunder · WIS save or you turn Invisible to target' },
+      { id: 'Fire',   label: 'Fire: +1d10 fire' },
+      { id: 'Frost',  label: 'Frost: +1d6 cold · CON save or target Speed 0' },
+      { id: 'Hill',   label: 'Hill: +1d6 weapon-type · STR save or Prone' },
+      { id: 'Stone',  label: 'Stone: +1d6 force · STR save or pushed 10 ft' },
+      { id: 'Storm',  label: 'Storm: +1d6 lightning · CON save or Disadvantage on attacks' }
+    ];
+    const sotgRow = document.createElement('div');
+    sotgRow.className = 'attack-toggle-row';
+    sotgRow.innerHTML = `
+      <div class="attack-toggle-label has-tip" title="Once per turn on a successful melee/thrown weapon hit, expend a use to apply the selected strike effect. ${sotgRemaining}/${sotgMax} uses remaining (track pips in Combat Resources). Save DC ${sotgDC} (8 + PB + ${saveAbility}). Damage auto-stacks into attack profiles when a type is selected and uses remain.">Strike of the Giants <span class="resource-meta">DC ${sotgDC} · ${sotgRemaining}/${sotgMax} left</span></div>
+      <select id="strike-of-the-giants-select" class="ancestry-select"${sotgRemaining === 0 ? ' disabled' : ''}>
+        ${sotgOptions.map(o => `<option value="${o.id}"${o.id === sotgCurrent ? ' selected' : ''}>${o.label}</option>`).join('')}
+      </select>
+    `;
+    sotgRow.querySelector('#strike-of-the-giants-select').addEventListener('change', (e) => {
+      state.strikeOfTheGiantsType = e.target.value;
+      saveState();
+      render();
+    });
+    list.appendChild(sotgRow);
   }
 
   for (const p of profiles) {
@@ -10913,6 +10997,8 @@ document.getElementById('long-rest-btn').addEventListener('click', () => {
     state.pactSlotsUsed = 0;
     state.magicalCunningUsed = false;
     state.ancestryUsesUsed = 0;
+    state.strikeOfTheGiantsUsed = 0;
+    state.strikeOfTheGiantsType = '';
     state.bottledRespiteUsed = false;
     state.elementalGiftFlyUsed = 0;
     state.vesselHpCurrent = null;
