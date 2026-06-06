@@ -8084,13 +8084,19 @@ function renderConditions() {
     pill.textContent = name;
     pill.title = CONDITION_DESCRIPTIONS[key] || '';
     pill.addEventListener('click', () => {
-      state.conditions[key] = !state.conditions[key];
-      // RAW: Rage ends if you become Incapacitated (or only Unconscious at Barb 15+).
-      // Conditions that include Incapacitated by RAW: incapacitated, stunned,
-      // paralyzed, petrified, unconscious. Unconscious always ends rage.
-      enforceRageEndingConditions();
-      saveState();
-      render(); // condition flips can change Speed and other displayed stats
+      if (state.conditions[key]) {
+        showConfirm(name, `<p style="line-height:1.6">${CONDITION_DESCRIPTIONS[key] || ''}</p>`, () => {
+          state.conditions[key] = false;
+          enforceRageEndingConditions();
+          saveState();
+          render();
+        }, { okLabel: 'Clear Condition' });
+      } else {
+        state.conditions[key] = true;
+        enforceRageEndingConditions();
+        saveState();
+        render();
+      }
     });
     container.appendChild(pill);
   }
